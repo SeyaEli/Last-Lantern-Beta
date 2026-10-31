@@ -1,0 +1,12 @@
+node_modules/
+dist/
+release/
+.vercel/
+.DS_Store
+*.log
+android/.gradle/
+android/local.properties
+android/**/build/
+*.jks
+*.keystore
+keystore.properties

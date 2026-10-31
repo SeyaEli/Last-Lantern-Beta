@@ -1,0 +1,88 @@
+PASS fresh account, legacy migration, and level-200 save validation
+PASS all ten permanent camp tracks cap at 200 and charge exactly once
+PASS 18 class skills learn, equip, train to 200 and reject extra charges
+PASS campaign completes exactly 600 waves with 30 boss encounters
+PASS endless passes wave 600, cycles maps and scales enemy vitality
+PASS enemy vitality, damage and spawn pressure increase across waves and maps
+PASS Continue restores exact state, projectile hit sets and purchased build
+PASS invalid or damaged expedition is rejected without replacing permanent progress
+PASS pending blessing survives save and grants one choice only
+PASS boss break is resumable, reward is not duplicated and checkpoint starts next wave
+PASS all 18 equipped skills have effects after the correct cast delay
+PASS enemy casting anticipates before projectile release and dies without late attacks
+PASS all enemy archetypes and bosses have distinct walk, attack, windup and death poses
+PASS dash ghosts follow actual movement, freeze on pause and expire
+PASS offline runtime has no external dependencies and all management routes render
+PASS cooldown blessings and active build survive camp purchases and Continue
+PASS level-200 camp remains finite and long-run damage, haste and speed are bounded
+PASS normal attacks show anticipation before the contact frame
+PASS every ranged class emits projectiles at its weapon in both directions
+PASS all thirty-two action sheets contain 255 nonempty distinct frames
+PASS 31 class weapons keep their complete armed hero art and animated locomotion
+PASS high enemy and projectile load updates with bounded live objects
+PASS all 31 walking atlases have eight distinct leg poses and transparent borders
+PASS stride follows distance, stops at rest, freezes on pause and excludes dashing
+PASS moving attacks preserve the complete original pose without grafted legs in both facings
+PASS all walking variants come from separate complete-body source sequences
+PASS nine new weapon action bindings include eight registered attack and skill poses each
+PASS all nine weapons render their new animation and release the skill after frame four
+PASS high attack speed accelerates the clip and still completes recovery before restarting
+PASS story starts in a safe physical outpost and waits for an NPC conversation
+PASS all six tile maps have connected playable routes and reachable witnesses and mechanisms
+PASS walking and fast dashes cannot cross locked gates or solid walls
+PASS projectiles stop at walls and destructible crates, with rewards only once
+PASS enemy movement stays on walkable terrain and steers around cover
+PASS story waves require clearing enemies and cannot advance on a timer alone
+PASS mid-dialogue Continue restores the exact speaker, page and quest state
+PASS completed district gates and NPC rewards survive Continue without duplicate rewards
+PASS legacy Story expeditions migrate into solid maps without losing their wave or purchases
+PASS invalid story room, dialogue and quest data is rejected safely
+PASS the entire story progresses through thirty NPC objectives, 600 cleared waves and a saved ending
+PASS mechanisms must both be activated before the third district starts fighting
+PASS the second district stays locked until all three physical memory items are recovered
+PASS partial crate damage, recovered items, switches and choices survive an expedition save
+PASS touch Interact breaks a nearby crate without walking through it
+PASS all six NPC archetypes and twelve terrain textures load as embedded local art
+PASS Back to the road closes the native NPC dialog and resumes movement and saving
+PASS finishing every NPC conversation type closes its modal without leaving the world paused
+PASS a resumed NPC conversation closes through Back to the road and stays closed on Continue
+PASS all thirty named bosses have two registered distinct skills with readable warning times
+PASS all sixty boss skills render warnings, hold damage until release and perform their advertised effect
+PASS all boss skill ground marks and teleport destinations stay on story floors
+PASS enrage shortens every boss skill cooldown without shortening its warning
+PASS stuns interrupt committed casts, and burst damage breaks healing rituals
+PASS boss death cancels pending casts and removes owned hazards and projectiles only
+PASS boss fields respect armor, shields and hit-once rules, and shockwaves hurt at their edge
+PASS charge paths and beam damage are stopped by solid Story cover
+PASS mid-cast saves preserve locked targets and remaining warning time, and pause freezes skills
+PASS boss abilities are enabled in Campaign, Story and Endless and their guide closes correctly
+PASS reinforcements and special projectiles remain capped during repeated boss casts
+PASS a blink lands on its marked Story destination without the walking collision sweep pulling it back
+PASS active skill fields retain ownership and lifetime across Continue
+PASS a projectile cannot hit the player later in the same frame after its boss dies
+PASS twelve offline pixel-effect atlases contain 96 distinct transparent animation cells
+PASS all eighteen hero skill visuals start at actual release and animate without dealing cosmetic damage
+PASS projectile sprites and muzzle effects preserve every ranged weapon origin in both facings
+PASS projectile trails follow sampled travel and animate during flight without mutating physics in draw
+PASS enemy cast art is delayed to projectile release and matches its source for all chapters
+PASS all sixty boss abilities produce animated themed release effects with owner cleanup
+PASS combat visual state is bounded, pauses with gameplay, and is omitted from Continue data
+PASS cover impacts use the swept collision point and full combat renders in all three modes
+PASS all 31 weapons have full attack clips and unique tiered signature profiles
+PASS 104 new poses have transparent borders and complete registered body footprints
+PASS every weapon anticipates then releases once at its registered contact frame
+PASS weapon motion and new release effects preserve firing points in both directions
+PASS all weapon signatures animate distinctly, and legendary and mythic details increase without damage
+PASS new attack cycles pause, cancel on dash and resume exactly through Continue
+PASS the Seraph Lantern stays visibly present at every registered pose including contact
+PASS all 1800 successive waves scale health damage and pressure across chapter and Endless boundaries
+PASS all successive bosses grow stronger across realm and Endless boundaries
+PASS elites arrive every five ordinary waves and milestone bosses remain every twenty
+PASS spawn caps count living enemies and handle dead bodies
+PASS Story crowds scale across six chapters with elites and solid-floor spawning
+PASS Story reinforcements are paced bounded frozen on pause and resumable
+PASS bosses chain exactly two or three full-warning skills and then recover
+PASS boss stagger protection prevents permanent stun while leaving rituals interruptible
+PASS mid-combo Continue preserves phase remaining casts and stagger protection
+PASS chapter trait attacks have scaled damage and a complete warning
+Passed 87 integration checks

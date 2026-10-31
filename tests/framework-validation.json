@@ -1,0 +1,14 @@
+{
+  "gameplayChecks": 142,
+  "lanternModuleChecks": 10,
+  "combatModuleChecks": 11,
+  "directorModuleChecks": 9,
+  "windowsEmbeddedFilesVerified": 199,
+  "androidEmbeddedEntriesVerified": 4,
+  "webBuild": true,
+  "windowsBuild": true,
+  "androidDebugBuild": true,
+  "liveDeviceOrBrowserTested": false,
+  "eaterModuleChecks": 11,
+  "runnerModuleChecks": 12
+}

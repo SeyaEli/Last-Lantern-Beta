@@ -1,0 +1,10 @@
+const fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
+const env={...process.env};
+const candidates=[env.JAVA_HOME,path.join(env.ProgramFiles||'C:/Program Files','Android/Android Studio/jbr')].filter(Boolean);
+const java=candidates.find(p=>{const r=spawnSync(path.join(p,'bin',process.platform==='win32'?'java.exe':'java'),['-version'],{encoding:'utf8'});return Number((r.stderr||'').match(/version "(\d+)/)?.[1])>=21});
+if(!java)throw Error('Install Android Studio with JDK 21 or set JAVA_HOME to JDK 21+.');
+env.JAVA_HOME=java;
+const sdk=env.ANDROID_HOME||env.ANDROID_SDK_ROOT||path.join(env.LOCALAPPDATA||'','Android/Sdk');
+if(fs.existsSync(sdk))env.ANDROID_HOME=sdk;
+const result=process.platform==='win32'?spawnSync('cmd.exe',['/d','/s','/c','gradlew.bat assembleDebug'],{cwd:path.join(__dirname,'../android'),env,stdio:'inherit'}):spawnSync('./gradlew',['assembleDebug'],{cwd:path.join(__dirname,'../android'),env,stdio:'inherit'});
+process.exit(result.status??1);

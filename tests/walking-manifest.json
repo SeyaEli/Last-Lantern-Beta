@@ -1,0 +1,374 @@
+{
+  "walk_brann_crook": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_brann_crook-source.png"
+  },
+  "walk_brann_dawnseeker": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_brann_dawnseeker-source.png"
+  },
+  "walk_brann_eclipselantern": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_brann_eclipselantern-source.png"
+  },
+  "walk_brann_iron": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_brann_iron-source.png"
+  },
+  "walk_brann_moonlit": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_brann_moonlit-source.png"
+  },
+  "walk_brann_silver": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_brann_silver-source.png"
+  },
+  "walk_brann_soulfire": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_brann_soulfire-source.png"
+  },
+  "walk_brann_void": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_brann_void-source.png"
+  },
+  "walk_jax_cannon": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_jax_cannon-source.png"
+  },
+  "walk_jax_harbinger": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_jax_harbinger-source.png"
+  },
+  "walk_jax_repeater": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_jax_repeater-source.png"
+  },
+  "walk_jax_rifle": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_jax_rifle-source.png"
+  },
+  "walk_jax_stormcoil": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_jax_stormcoil-source.png"
+  },
+  "walk_nyx_bow": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_nyx_bow-source.png"
+  },
+  "walk_nyx_eclipsebow": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_nyx_eclipsebow-source.png"
+  },
+  "walk_nyx_phoenix": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_nyx_phoenix-source.png"
+  },
+  "walk_nyx_storm": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_nyx_storm-source.png"
+  },
+  "walk_nyx_thorn": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_nyx_thorn-source.png"
+  },
+  "walk_orin_archmage": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_orin_archmage-source.png"
+  },
+  "walk_orin_codex": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_orin_codex-source.png"
+  },
+  "walk_orin_ember": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_orin_ember-source.png"
+  },
+  "walk_orin_frost": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_orin_frost-source.png"
+  },
+  "walk_orin_wand": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_orin_wand-source.png"
+  },
+  "walk_rook_fists": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_rook_fists-source.png"
+  },
+  "walk_rook_thunder": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_rook_thunder-source.png"
+  },
+  "walk_rook_titan": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_rook_titan-source.png"
+  },
+  "walk_sera_bell": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_sera_bell-source.png"
+  },
+  "walk_sera_bloom": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_sera_bloom-source.png"
+  },
+  "walk_sera_halo": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_sera_halo-source.png"
+  },
+  "walk_sera_scepter": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_sera_scepter-source.png"
+  },
+  "walk_sera_seraph": {
+    "frames": 8,
+    "width": 192,
+    "height": 160,
+    "anchor": [
+      96,
+      144
+    ],
+    "strideDistance": 64,
+    "completeBody": true,
+    "source": "full-body/walk_sera_seraph-source.png"
+  }
+}

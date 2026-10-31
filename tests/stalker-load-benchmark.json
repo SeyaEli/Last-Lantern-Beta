@@ -1,0 +1,9 @@
+{
+  "environment": "Simulation only on authoring host; excludes rendering and target-device FPS",
+  "frames": 90,
+  "enemies": 150,
+  "stalkers": 3,
+  "projectileCap": 320,
+  "medianMilliseconds": 0.9768999999978405,
+  "p95Milliseconds": 1.8443000000006577
+}

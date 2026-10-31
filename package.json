@@ -1,0 +1,63 @@
+{
+  "name": "last-lantern",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Last Lantern offline action RPG — Phaser, Windows and Android",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "desktop": "npm run build && electron .",
+    "desktop:build": "npm run build && electron-builder --win dir --x64",
+    "android:sync": "npm run build && cap sync android",
+    "android:open": "cap open android",
+    "android:debug": "npm run android:sync && node scripts/build-android.cjs",
+    "test": "node scripts/check-project.cjs",
+    "branding": "node scripts/prepare-branding.cjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/app": "8.1.0",
+    "@capacitor/core": "8.6.0",
+    "phaser": "3.90.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.0",
+    "@napi-rs/canvas": "1.1.0",
+    "@types/node": "24.10.0",
+    "electron": "45.1.0",
+    "electron-builder": "26.0.12",
+    "rcedit": "5.0.2",
+    "sharp": "0.35.5",
+    "typescript": "5.9.3",
+    "vite": "8.3.5"
+  },
+  "build": {
+    "appId": "io.lastlantern.game",
+    "productName": "Last Lantern",
+    "directories": {
+      "output": "release/windows"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "asar": true,
+    "afterPack": "scripts/brand-windows.cjs",
+    "win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "public/branding/icon.ico",
+      "signAndEditExecutable": false
+    }
+  }
+}

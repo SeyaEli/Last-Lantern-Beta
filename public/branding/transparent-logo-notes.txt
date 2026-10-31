@@ -1,0 +1,1 @@
+Background removal via the built-in imagegen tool from the original user-supplied Last Lantern logo. Preserve exact LAST LANTERN lettering, golden lantern and purple ornament; remove black rectangular matte; output genuine transparent PNG. Original retained as last-lantern-logo.png. Transparent UI variant: last-lantern-logo-transparent.png.

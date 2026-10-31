@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Last Lantern</string>
+    <string name="title_activity_main">Last Lantern</string>
+    <string name="package_name">io.lastlantern.game</string>
+    <string name="custom_url_scheme">io.lastlantern.game</string>
+</resources>

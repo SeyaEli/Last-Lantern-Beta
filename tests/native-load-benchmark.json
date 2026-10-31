@@ -1,0 +1,8 @@
+{
+  "environment": "Game simulation only on authoring host; not a render or browser FPS benchmark",
+  "frames": 90,
+  "enemies": 150,
+  "projectileCap": 320,
+  "medianMilliseconds": 0.6785000000002128,
+  "p95Milliseconds": 1.1273000000001048
+}

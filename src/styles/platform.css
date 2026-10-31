@@ -1,0 +1,26 @@
+#boot-status{position:fixed;inset:0;z-index:10000;display:grid;place-content:center;background:#102127;color:#fff0cd;font:18px system-ui;padding:24px;text-align:center}
+body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+#game{touch-action:none;image-rendering:pixelated;width:100%!important;height:auto!important}
+@media(pointer:coarse){button{min-height:44px}#arena{overscroll-behavior:contain}}
+.title-copy{max-width:660px;width:56%;padding:30px 4% 34px}
+.title-copy .game-logo-title{font-size:0;line-height:0;margin:0 0 16px}
+.official-logo{display:block;width:100%;max-width:440px;height:auto;object-fit:contain}
+.title-copy .game-logo-title{max-width:440px}
+.title-copy .home-actions{margin:20px 0 12px}
+.title-copy .home-footnote{margin-top:24px}
+.boot-logo{width:min(76vw,480px);height:auto;max-height:66vh;object-fit:contain}
+#boot-status{justify-items:center;gap:18px}
+#boot-message{margin:0}
+@media(max-width:650px){.title-copy{width:100%;padding:28px 22px}.official-logo{max-width:380px;margin-inline:0}.title-copy .home-footnote{margin-top:24px}}
+
+.brand-logo{display:block;width:68px;height:51px;object-fit:contain;flex-shrink:0}
+@media(max-width:480px){.brand-logo{width:44px;height:33px}}
+.lantern-panel{max-width:1300px;margin:12px auto;display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;padding:12px 16px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:.875rem}
+.lantern-panel label{display:flex;gap:10px;align-items:center}.lantern-panel progress{width:150px;height:14px;accent-color:var(--gold)}
+.lantern-panel p{flex-basis:100%;margin:0;line-height:1.5;color:var(--muted)}.lantern-panel button{min-height:44px;margin-left:auto}
+@media(max-width:480px){.lantern-panel{padding:10px;gap:8px}.lantern-panel progress{width:100px}.lantern-panel button{width:100%;margin:0}}
+.prep-fields input{min-height:44px;width:100%;box-sizing:border-box;padding:10px;background:var(--panel);color:var(--text);border:1px solid var(--line);font:inherit}
+.director-status{max-width:1300px;margin:12px auto;color:var(--muted);font-size:.875rem;overflow-wrap:anywhere}
+.prep-fields input:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+.mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mode-grid .mode-card:last-child{grid-column:auto}
+@media(max-width:650px){.mode-grid{grid-template-columns:minmax(0,1fr)}}

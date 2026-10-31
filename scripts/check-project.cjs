@@ -1,0 +1,21 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{spawnSync}=require('node:child_process');
+const root=path.join(__dirname,'..'),manifest=require('../src/engine/assets.json'),report=require('../tests/migration-manifest.json');
+assert.equal(Object.keys(manifest).length,report.assetIds);
+for(const [id,url]of Object.entries(manifest)){assert(!url.includes('..'),id);assert(fs.statSync(path.join(root,'public',url)).size>0,id)}
+const engine=fs.readFileSync(path.join(root,'src/engine/runtime.js'),'utf8');
+assert(!engine.includes('data:image'));assert(!engine.includes('requestAnimationFrame('),'Phaser must own the only frame loop');
+assert(engine.includes("SAVE_KEY='last-lantern-v2'"),'keep save import compatibility');
+const lantern=spawnSync(process.execPath,[path.join(root,'tests/lantern.test.mjs')],{cwd:root,stdio:'inherit'});
+if(lantern.status!==0)process.exit(lantern.status??1);
+const combat=spawnSync(process.execPath,[path.join(root,'tests/combat.test.mjs')],{cwd:root,stdio:'inherit'});
+if(combat.status!==0)process.exit(combat.status??1);
+const director=spawnSync(process.execPath,[path.join(root,'tests/director.test.mjs')],{cwd:root,stdio:'inherit'});
+if(director.status!==0)process.exit(director.status??1);
+const eater=spawnSync(process.execPath,[path.join(root,'tests/eater.test.mjs')],{cwd:root,stdio:'inherit'});
+if(eater.status!==0)process.exit(eater.status??1);
+const runner=spawnSync(process.execPath,[path.join(root,'tests/runner.test.mjs')],{cwd:root,stdio:'inherit'});
+if(runner.status!==0)process.exit(runner.status??1);
+const stalker=spawnSync(process.execPath,[path.join(root,'tests/stalker.test.mjs')],{cwd:root,stdio:'inherit'});
+if(stalker.status!==0)process.exit(stalker.status??1);
+const result=spawnSync(process.execPath,[path.join(root,'tests/gameplay.cjs')],{cwd:root,stdio:'inherit'});
+process.exit(result.status??1);
