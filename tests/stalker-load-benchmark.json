@@ -4,6 +4,6 @@
   "enemies": 150,
   "stalkers": 3,
   "projectileCap": 320,
-  "medianMilliseconds": 0.9768999999978405,
-  "p95Milliseconds": 1.8443000000006577
+  "medianMilliseconds": 2.1401999999980035,
+  "p95Milliseconds": 3.565499999996973
 }

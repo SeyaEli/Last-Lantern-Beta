@@ -29,7 +29,8 @@ module.exports=function({t,check,reset,bossScene,els,fs,path,root,assert,element
   r.hazards=[];t.advanceWaves(r,.5);assert.equal(r.story.rooms[1].waveSpawned,20);assert.equal(r.enemies.filter(e=>e.boss).length,1);t.advanceWaves(r,1);assert.equal(r.enemies.filter(e=>e.boss).length,1);finish();
  });
  check('arrival warnings delay enemy movement contact and projectile release',()=>{
-  const r=seeded('arrival','campaign');r.enemies=[];r.spawn=999;r.invuln=0;r.shield=0;r.shrines=[];const e=t.spawnEnemy(false,2,{arrival:true});e.x=r.x+35;e.y=r.y;e.speed=0;e.cast={left:.01,total:.38,shots:[{angle:0,speed:100,dmg:20}],zones:[]};r.shots=[];
+  // Generic casts retain this arrival regression; archers now have their own full-warning test.
+  const r=seeded('arrival','campaign');r.enemies=[];r.spawn=999;r.invuln=0;r.shield=0;r.shrines=[];const e=t.spawnEnemy(false,3,{arrival:true});e.x=r.x+35;e.y=r.y;e.speed=0;e.cast={left:.01,total:.38,shots:[{angle:0,speed:100,dmg:20}],zones:[]};r.shots=[];
   for(let i=0;i<20;i++)t.update(.05);assert(e.spawnGrace>0);assert.equal(e.cast.left,.01);assert.equal(r.shots.length,0);assert.equal(r.hp,1e8);
   for(let i=0;i<8;i++)t.update(.05);assert.equal(e.spawnGrace,0);assert.equal(e.cast,null);assert(r.shots.length>0);finish();
  });

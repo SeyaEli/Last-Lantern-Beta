@@ -1,0 +1,7 @@
+{
+  "environment": "Simulation only on authoring host; not rendered FPS or target-device performance",
+  "frames": 90,
+  "archers": 24,
+  "medianMilliseconds": 12.543799999999464,
+  "p95Milliseconds": 14.89010000000053
+}

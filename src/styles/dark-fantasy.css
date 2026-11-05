@@ -1,0 +1,95 @@
+/* Blackened iron, bone lettering, and antique metal replace the flat panel skin. */
+:root{--bg:#121313;--panel:#1c1b19;--raised:#302c26;--line:#82735b;--text:#eee3cf;--muted:#c4baa9;--gold:#e3bd78;--ink:#17130e;--fantasy-silver:#a79c87;--fantasy-edge:#78674c;--fantasy-ember:#e9a951}
+body:not(.playing){background:#101110;color:var(--text)}
+body:not(.playing) .shell>header{border-bottom:1px solid #b0975c26}
+body:not(.playing):not([data-page=home]) .shell::before{background-image:linear-gradient(90deg,#0f100fe6,#12110fb8 55%,#0c0d0d94),linear-gradient(0deg,#070909d9,transparent 70%),var(--menu-scene);filter:saturate(.5)}
+body:not(.playing):not([data-page=home]) .shell::after{background:radial-gradient(ellipse at 75% 85%,#dc85301c,transparent 48%),repeating-linear-gradient(25deg,transparent 0 3px,#c2b18c04 3px 4px)}
+body:not(.playing) h1,body:not(.playing) h2,body:not(.playing) h3,.world-nav button,.home-menu button,.screen-pager button,dialog h2,dialog h3{font-family:Georgia,'Palatino Linotype',serif;font-weight:400}
+.brand h1{color:#ead8b4;letter-spacing:.06em;text-shadow:0 1px 6px #000}
+.screen-heading{position:relative;border-left:0;border-bottom:1px solid #ab916044;background:linear-gradient(90deg,#1d1b16e6,#121311af 70%,transparent);padding-left:20px}
+.screen-heading::before{content:'✦';position:absolute;left:2px;top:17px;font-size:11px;color:#d9b976}
+.screen-heading h2{color:#efdfbd;letter-spacing:-.02em}.screen-heading .chapter{color:#ceb27f}
+.world-nav{border-color:#ad956543;gap:7px}
+.world-nav button{display:flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(180deg,#24231fec,#121413f5);border-color:#8e80635e;border-radius:0;box-shadow:inset 0 0 0 2px #080a0980;color:#cfc5b1}
+.world-nav button[aria-current=page]{background:linear-gradient(180deg,#49402bd9,#221c13f5);border-color:#d6b374;color:#ffe4a5;box-shadow:inset 0 0 0 2px #8d6b3336,0 0 12px #d99b3924}
+.nav-rune{width:19px;height:19px;display:inline-flex;flex:0 0 19px;color:#b2a080}.nav-rune svg{width:100%;height:100%}.world-nav button[aria-current=page] .nav-rune{color:#e1b66b}
+body:not(.playing) button:not(.home-menu button):not(.world-nav button){border-radius:0;border-color:#8c795a;background:linear-gradient(180deg,#343128,#1a1b18);box-shadow:inset 0 0 0 2px #070a0859;color:#e7dac1}
+body:not(.playing) button.primary,dialog button.primary{background:linear-gradient(180deg,#dfbd7c,#a47b3d);border-color:#f1d098;color:#21190d;text-shadow:0 1px #f0d69c55;box-shadow:inset 0 0 0 2px #7a572c55,0 3px 10px #0007}
+body:not(.playing) button:disabled,dialog button:disabled{opacity:1;color:#a99e88;border-color:#665f4e;background:#242520;box-shadow:inset 0 0 0 2px #0c0e0c33}
+button:focus-visible{outline:2px solid #f0ca84;outline-offset:4px}
+/* Each banner remains a real button: its frame, crest, and vignette are decorative. */
+.home-menu{width:39%;max-width:470px;right:3%;gap:10px}
+.home-menu button{position:relative;isolation:isolate;height:clamp(55px,8dvh,86px);min-height:0;padding:5px 28px 5px 78px;display:flex;align-items:center;border:0;border-radius:0;background:transparent;box-shadow:none;color:#e6d7bc;text-align:left;filter:drop-shadow(0 3px 5px #0009);transition:filter .16s,color .16s}
+.home-menu button::after{content:'';position:absolute;inset:0 0 0 42px;pointer-events:none;z-index:0;background:var(--fantasy-banner) right center/180% 200% no-repeat;clip-path:polygon(0 50%,12px 0,100% 0,100% 100%,12px 100%)}
+.home-menu button .menu-copy{display:block;position:relative;z-index:3;margin:0;width:100%;font:inherit}
+.home-menu button .menu-title{display:block;font:400 clamp(18px,1.85vw,25px)/1.15 Georgia,serif;margin:0;color:inherit;text-shadow:0 2px 4px #000}
+.home-menu button .menu-caption{display:block;font:400 13px/1.3 Georgia,serif;margin:4px 0 0;color:#bfb39e;text-shadow:0 1px 4px #000}
+.home-menu button .menu-crest{position:absolute;z-index:3;left:3px;top:50%;transform:translateY(-50%);width:68px;height:68px;margin:0;display:grid;place-items:center;color:#c4ad7e;background:var(--fantasy-banner) left center/300% 100% no-repeat;filter:drop-shadow(0 1px 2px #000)}
+.menu-crest svg{width:32px;height:32px}
+.home-menu button .menu-vignette{position:absolute;z-index:1;inset:15% 8% 15% auto;width:32%;margin:0;background-position:center;background-size:cover;opacity:.16;filter:grayscale(.7);mask-image:linear-gradient(90deg,transparent,#000 65%);pointer-events:none}
+.home-menu button:hover:enabled,.home-menu button:focus-visible{background-color:transparent;color:#ffe2a0;filter:drop-shadow(0 0 3px #e0aa55aa) drop-shadow(0 0 10px #db7b2733)}
+.home-menu button:hover .menu-crest,.home-menu button:focus-visible .menu-crest{color:#f9cb78;filter:drop-shadow(0 0 4px #bd772a)}
+.title-copy{width:44%}.home-hero{right:40%;width:23%;opacity:.8}.home-caption{right:42%}
+/* Nine-sliced borders keep the ornamental corners at a constant size on cards. */
+#managementContent #shop>article,.mode-grid>article{background:radial-gradient(ellipse at 25% 0%,#48403024,transparent 70%),repeating-linear-gradient(120deg,#ffffff02 0 1px,transparent 1px 4px),linear-gradient(135deg,#22221ff5,#101311f7);border-color:#81735880;border-radius:0;box-shadow:0 5px 16px #0008,inset 0 0 0 3px #080a08aa}
+#managementContent #shop>article::before,.mode-grid>article::before{content:'';position:absolute;inset:0;width:auto;height:auto;border:16px solid transparent;border-image-source:var(--fantasy-card-frame);border-image-slice:22%;border-image-width:22px;border-image-repeat:stretch;pointer-events:none;z-index:2;opacity:.75}
+#managementContent #shop>article::after,.mode-grid>article::after{content:'◆';position:absolute;right:11px;bottom:8px;left:auto;top:auto;width:auto;height:auto;border:0;font-size:8px;color:#bd9d64;pointer-events:none}
+#managementContent #shop>.item.selected,#managementContent #shop>.item.equipped{background:radial-gradient(ellipse at 0 0,#d0a45722,transparent 70%),linear-gradient(135deg,#2b291ff7,#161811f7);border-color:#c0a06a;box-shadow:0 4px 18px #0008,inset 0 0 0 3px #9a793833}
+#managementContent #shop>.item.selected::before,#managementContent #shop>.item.equipped::before{opacity:1;filter:drop-shadow(0 0 2px #c6984955)}
+#managementContent .item-top h3,#managementContent .upgrade-card h3{font-family:Georgia,serif;font-size:18px;font-weight:400;color:#ecd9b6}
+#managementContent .item p{color:#c4bba9}.card-watermark{color:#b8a16d;opacity:.045}
+.skill-emblem{border-radius:0;background:radial-gradient(circle,#a4834230,#171a17 75%);border-color:#8f7c59;box-shadow:inset 0 0 0 2px #090c09,0 1px 7px #0006}
+#managementContent .hero-art,#managementContent .weapon-art,#managementContent .armor-art{background:radial-gradient(ellipse at 50% 70%,#b5904a24,transparent 70%);border-bottom-color:#9a805f4f}
+.mode-grid>article{background-image:linear-gradient(180deg,#1415127a,#171914ed 110px,#111410fa 200px),var(--card-scene);background-size:cover;background-position:center}.mode-number{color:#d3b57b}.mode-card h3{color:#ecdbb8}
+.gear-stars .lit{color:#e9bf74}.gear-stars strong{color:#cfc3ad}.gear-preview{color:#d2b783!important}
+#managementContent #shop>.gear-awakened{background:radial-gradient(ellipse at 0 0,#ae7acc24,transparent 65%),linear-gradient(135deg,#28212ef7,#14151cf7);border-color:#b599d2}
+#managementContent #shop>.gear-awakened::before{filter:drop-shadow(0 0 3px #b893df66);opacity:1}
+.screen-pager span{color:#d9c298}.footer,.footer button{color:#bfb29a}
+dialog{background:repeating-linear-gradient(130deg,#ffffff02 0 1px,transparent 1px 4px),linear-gradient(135deg,#24241f,#111411);border:1px solid #b49a65;border-radius:0;box-shadow:inset 0 0 0 4px #090c09,0 12px 80px #000c;color:#e9ddc5}
+dialog h2{color:#ebcf96}dialog p{color:#d0c4ae}dialog .choice,.boss-guide-entry{border-color:#8d7a56;background:linear-gradient(135deg,#343126a6,#141713)}
+.prep-fields select,.prep-fields input{background:#121612;color:#e4d6bc;border-color:#8d7856}
+@media(max-width:1050px){.nav-rune{display:none}.home-menu{width:43%;max-width:420px}.home-menu button{padding-left:65px}.home-menu button .menu-crest{left:12px;width:40px;height:40px}.menu-crest svg{width:28px;height:28px}.home-menu button .menu-title{font-size:20px}.home-menu button .menu-caption{font-size:12px}}
+@media(max-width:700px) and (orientation:portrait){
+ .title-copy{width:100%}.home-hero{right:-8%;width:58%}.home-menu{left:5%;right:auto;bottom:12px;width:90%;max-width:none;display:grid;grid-template-columns:1fr 1fr;gap:5px}
+ .home-menu button{height:52px;padding:5px 12px 5px 44px}.home-menu button .menu-title{font-size:13px;line-height:1.2}.home-menu button .menu-caption{display:none}.home-menu button .menu-crest{left:7px;width:30px;height:30px}.menu-crest svg{width:21px;height:21px}
+ #managementContent .item-top h3,#managementContent .upgrade-card h3{font-size:17px}
+}
+@media(max-height:620px){.home-menu{gap:5px}.home-menu button{height:46px;padding-left:59px}.home-menu button .menu-title{font-size:17px}.home-menu button .menu-caption{display:none}.home-menu button .menu-crest{left:10px;width:35px;height:35px}.menu-crest svg{width:25px;height:25px}#managementContent .item-top h3,#managementContent .upgrade-card h3{font-size:16px}}
+@media(max-height:480px){
+ .home-menu{display:grid;grid-template-columns:1fr 1fr;width:46%;gap:5px}.home-menu button{height:45px;padding-left:42px;padding-right:10px}.home-menu button .menu-title{font-size:13px}.home-menu button .menu-crest{left:7px;width:28px;height:28px}.menu-crest svg{width:20px;height:20px}
+ .world-nav button{font-size:11px}#managementContent .item-top h3,#managementContent .upgrade-card h3{font-size:14px}
+}
+@media(prefers-reduced-motion:reduce){.home-menu button{transition:none}}
+body:not(.playing) button.primary:not(.home-menu button):not(.world-nav button){background:linear-gradient(180deg,#dfbd7c,#a47b3d);border-color:#f1d098;color:#21190d;text-shadow:0 1px #f0d69c55;box-shadow:inset 0 0 0 2px #7a572c55,0 3px 10px #0007}
+.wallet{background:#1c201ad9;border-color:#7e7156}
+.title-scene::before{background:linear-gradient(90deg,#10110ff0,#10110fa6 40%,#10110f26 78%),linear-gradient(0deg,#0c100dbb,transparent 50%)}
+/* Faithful menu illustrations: retain the supplied art and its aspect ratio. */
+.home-menu{width:min(43vw,calc((100dvh - 150px)*.54));max-width:520px;gap:4px}
+.home-menu button{display:block;width:100%;min-width:0;max-width:100%;height:auto;min-height:0;align-self:start;justify-self:stretch;aspect-ratio:852 / var(--menu-art-height);padding:0;border:0;background:none;box-shadow:none;filter:drop-shadow(0 3px 5px #0008)}
+.home-menu button::after{display:none}
+.home-menu button .menu-reference-art{position:absolute;inset:0;display:block;width:100%;height:100%;margin:0;pointer-events:none}
+.menu-reference-art svg{display:block;width:100%;height:100%;overflow:visible}
+.home-menu button .menu-copy{position:absolute;left:28%;top:35%;width:64%;margin:0}
+.home-menu button[data-art-ready=true] .menu-copy{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.home-menu button:hover:enabled,.home-menu button:focus-visible{filter:drop-shadow(0 0 3px #d8a34b99) drop-shadow(0 0 9px #d28a3533);background:none}
+@media(max-width:700px) and (orientation:portrait){
+ .title-copy{display:flex;align-items:center;gap:10px;padding:8px;width:100%}.title-copy .chapter,.title-story,.title-copy .home-footnote,.title-copy #continueSummary,.home-hero,.home-caption{display:none}
+ .title-copy .game-logo-title{width:110px;flex:0 0 110px;margin:0}.title-copy .official-logo{width:110px;max-height:80px}.title-copy .home-actions{flex:1;display:flex;flex-direction:column;gap:5px;margin:0}.home-actions button{min-height:36px;padding:6px;font-size:12px}
+ .home-menu{display:flex;left:auto;right:5%;top:auto;bottom:8px;transform:none;width:min(90vw,calc((100dvh - 240px)*.54));max-width:none;gap:2px}
+ .home-menu button{height:auto;min-height:44px;padding:0}
+}
+@media(max-height:480px){.home-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:46%;gap:4px}.home-menu button{height:auto;min-height:44px;padding:0}}
+/* The in-game page navigation uses the ornamental frame too. */
+.world-nav button{--nav-fill:linear-gradient(180deg,#23231ce8,#11150ff0);position:relative;isolation:isolate;border:1px solid transparent;background:transparent;box-shadow:none}
+.world-nav button::after{content:'';position:absolute;inset:4px;z-index:-1;background:var(--nav-fill);clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px),0 4px);pointer-events:none}
+.world-nav button::before{content:'';position:absolute;inset:0;border:12px solid transparent;border-image-source:var(--fantasy-card-frame);border-image-slice:22%;border-image-width:15px;border-image-repeat:stretch;pointer-events:none;opacity:.9}
+.world-nav button[aria-current=page]{--nav-fill:linear-gradient(180deg,#4a3d23e8,#211b11f2);border-color:transparent;background:transparent;box-shadow:none}
+.world-nav button[aria-current=page]::before,.world-nav button:hover::before{opacity:1;filter:drop-shadow(0 0 2px #e3ac4b88)}
+/* Keep the frame, but remove the second rectangular box behind/outside it. */
+#managementContent #shop>article,.mode-grid>article{--card-fill:radial-gradient(ellipse at 25% 0%,#48403024,transparent 70%),repeating-linear-gradient(120deg,#ffffff02 0 1px,transparent 1px 4px),linear-gradient(135deg,#22221ff5,#101311f7);background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+#managementContent #shop>article::after,.mode-grid>article::after{content:'';position:absolute;inset:7px;width:auto;height:auto;border:0;background:var(--card-fill);clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px),0 9px);pointer-events:none;z-index:-1}
+#managementContent #shop>article::before,.mode-grid>article::before{opacity:1}
+#managementContent #shop>.item.selected,#managementContent #shop>.item.equipped{--card-fill:radial-gradient(ellipse at 0 0,#d0a45722,transparent 70%),linear-gradient(135deg,#2b291ff7,#161811f7)}
+#managementContent #shop>.gear-awakened{--card-fill:radial-gradient(ellipse at 0 0,#ae7acc24,transparent 65%),linear-gradient(135deg,#28212ef7,#14151cf7)}
+.mode-grid>article{--card-fill:linear-gradient(180deg,#1415127a,#171914ed 110px,#111410fa 200px),var(--card-scene)}
+.mode-grid>article::after{background-size:cover;background-position:center}

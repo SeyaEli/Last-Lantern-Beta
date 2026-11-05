@@ -1,0 +1,1766 @@
+[
+  {
+    "label": "opening",
+    "page": "home",
+    "overflow": false,
+    "views": [
+      "homeScreen"
+    ],
+    "cards": [],
+    "hud": false,
+    "fuel": false,
+    "nav": false,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1280 heroes",
+    "page": "heroes",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Brann Active",
+        "overflow": false
+      },
+      {
+        "name": "Nyx ",
+        "overflow": false
+      },
+      {
+        "name": "Orin ",
+        "overflow": false
+      },
+      {
+        "name": "Rook ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1280 next page",
+    "page": "heroes",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Sera ",
+        "overflow": false
+      },
+      {
+        "name": "Jax ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1280 armory",
+    "page": "armory",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade common ",
+        "overflow": false
+      },
+      {
+        "name": "Silver Edge rare ",
+        "overflow": false
+      },
+      {
+        "name": "Void Fang Legendary ",
+        "overflow": false
+      },
+      {
+        "name": "Wanderer’s Lantern common Equipped",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1280 supplies",
+    "page": "supplies",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Crimson draught",
+        "overflow": false
+      },
+      {
+        "name": "Refined lantern oil",
+        "overflow": false
+      },
+      {
+        "name": "Emberfang tonic",
+        "overflow": false
+      },
+      {
+        "name": "Ironbark tonic",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1280 armor",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Traveler’s Cloak Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest ",
+        "overflow": false
+      },
+      {
+        "name": "Briarwarden Coat ",
+        "overflow": false
+      },
+      {
+        "name": "Moonweave Mantle ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1280 forge",
+    "page": "forge",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade",
+        "overflow": false
+      },
+      {
+        "name": "Wanderer’s Lantern",
+        "overflow": false
+      },
+      {
+        "name": "Traveler’s Cloak",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1280 skills",
+    "page": "skills",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Sunburst Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Guiding Beacon ",
+        "overflow": false
+      },
+      {
+        "name": "Soulflame ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1280 camp",
+    "page": "camp",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Tempered steel",
+        "overflow": false
+      },
+      {
+        "name": "Quickdraw",
+        "overflow": false
+      },
+      {
+        "name": "Keeper’s heart",
+        "overflow": false
+      },
+      {
+        "name": "Brighter flame",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1280 journal",
+    "page": "journal",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "An empty first page",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1280 modes",
+    "page": "modes",
+    "overflow": false,
+    "views": [
+      "modesScreen"
+    ],
+    "cards": [
+      {
+        "name": "The Six Beacons",
+        "overflow": false
+      },
+      {
+        "name": "The Debt of Dawn",
+        "overflow": false
+      },
+      {
+        "name": "The Long Night",
+        "overflow": false
+      },
+      {
+        "name": "Three Minutes to Dawn",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1920 heroes",
+    "page": "heroes",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Brann Active",
+        "overflow": false
+      },
+      {
+        "name": "Nyx ",
+        "overflow": false
+      },
+      {
+        "name": "Orin ",
+        "overflow": false
+      },
+      {
+        "name": "Rook ",
+        "overflow": false
+      },
+      {
+        "name": "Sera ",
+        "overflow": false
+      },
+      {
+        "name": "Jax ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1920 armory",
+    "page": "armory",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade common ",
+        "overflow": false
+      },
+      {
+        "name": "Silver Edge rare ",
+        "overflow": false
+      },
+      {
+        "name": "Void Fang Legendary ",
+        "overflow": false
+      },
+      {
+        "name": "Wanderer’s Lantern common Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Moonlit Lantern rare ",
+        "overflow": false
+      },
+      {
+        "name": "Soulfire Lantern epic ",
+        "overflow": false
+      },
+      {
+        "name": "Dawnseeker Lantern Legendary ",
+        "overflow": false
+      },
+      {
+        "name": "Eclipse Lantern mythic ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1920 supplies",
+    "page": "supplies",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Crimson draught",
+        "overflow": false
+      },
+      {
+        "name": "Refined lantern oil",
+        "overflow": false
+      },
+      {
+        "name": "Emberfang tonic",
+        "overflow": false
+      },
+      {
+        "name": "Ironbark tonic",
+        "overflow": false
+      },
+      {
+        "name": "Ember catalyst",
+        "overflow": false
+      },
+      {
+        "name": "Preservation ward",
+        "overflow": false
+      },
+      {
+        "name": "Broken-blade cache",
+        "overflow": false
+      },
+      {
+        "name": "Salvaged armor cache",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1920 armor",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Traveler’s Cloak Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest ",
+        "overflow": false
+      },
+      {
+        "name": "Briarwarden Coat ",
+        "overflow": false
+      },
+      {
+        "name": "Moonweave Mantle ",
+        "overflow": false
+      },
+      {
+        "name": "Warden’s Plate ",
+        "overflow": false
+      },
+      {
+        "name": "Dawnward Regalia ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1920 forge",
+    "page": "forge",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade",
+        "overflow": false
+      },
+      {
+        "name": "Wanderer’s Lantern",
+        "overflow": false
+      },
+      {
+        "name": "Traveler’s Cloak",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1920 skills",
+    "page": "skills",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Sunburst Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Guiding Beacon ",
+        "overflow": false
+      },
+      {
+        "name": "Soulflame ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1920 camp",
+    "page": "camp",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Tempered steel",
+        "overflow": false
+      },
+      {
+        "name": "Quickdraw",
+        "overflow": false
+      },
+      {
+        "name": "Keeper’s heart",
+        "overflow": false
+      },
+      {
+        "name": "Brighter flame",
+        "overflow": false
+      },
+      {
+        "name": "Trailblazer",
+        "overflow": false
+      },
+      {
+        "name": "Lantern workshop",
+        "overflow": false
+      },
+      {
+        "name": "Watchtower",
+        "overflow": false
+      },
+      {
+        "name": "Field infirmary",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1920 journal",
+    "page": "journal",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "An empty first page",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1920 modes",
+    "page": "modes",
+    "overflow": false,
+    "views": [
+      "modesScreen"
+    ],
+    "cards": [
+      {
+        "name": "The Six Beacons",
+        "overflow": false
+      },
+      {
+        "name": "The Debt of Dawn",
+        "overflow": false
+      },
+      {
+        "name": "The Long Night",
+        "overflow": false
+      },
+      {
+        "name": "Three Minutes to Dawn",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "800 heroes",
+    "page": "heroes",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Brann Active",
+        "overflow": false
+      },
+      {
+        "name": "Nyx ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "800 next page",
+    "page": "heroes",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Orin ",
+        "overflow": false
+      },
+      {
+        "name": "Rook ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "800 armory",
+    "page": "armory",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade common ",
+        "overflow": false
+      },
+      {
+        "name": "Silver Edge rare ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "800 supplies",
+    "page": "supplies",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Crimson draught",
+        "overflow": false
+      },
+      {
+        "name": "Refined lantern oil",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "800 armor",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Traveler’s Cloak Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "800 forge",
+    "page": "forge",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade",
+        "overflow": false
+      },
+      {
+        "name": "Wanderer’s Lantern",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "800 skills",
+    "page": "skills",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Sunburst Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Guiding Beacon ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "800 camp",
+    "page": "camp",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Tempered steel",
+        "overflow": false
+      },
+      {
+        "name": "Quickdraw",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "800 journal",
+    "page": "journal",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "An empty first page",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "800 modes",
+    "page": "modes",
+    "overflow": false,
+    "views": [
+      "modesScreen"
+    ],
+    "cards": [
+      {
+        "name": "The Six Beacons",
+        "overflow": false
+      },
+      {
+        "name": "The Debt of Dawn",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "390 heroes",
+    "page": "heroes",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Nyx ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "390 next page",
+    "page": "heroes",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Orin ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "390 armory",
+    "page": "armory",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade common ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "390 supplies",
+    "page": "supplies",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Crimson draught",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "390 armor",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Traveler’s Cloak Equipped",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "390 forge",
+    "page": "forge",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "390 skills",
+    "page": "skills",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Sunburst Equipped",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "390 camp",
+    "page": "camp",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Tempered steel",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "390 journal",
+    "page": "journal",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "An empty first page",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "390 modes",
+    "page": "modes",
+    "overflow": false,
+    "views": [
+      "modesScreen"
+    ],
+    "cards": [
+      {
+        "name": "The Six Beacons",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "844 heroes",
+    "page": "heroes",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Sera ",
+        "overflow": false
+      },
+      {
+        "name": "Jax ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "844 armory",
+    "page": "armory",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade common ",
+        "overflow": false
+      },
+      {
+        "name": "Silver Edge rare ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "844 supplies",
+    "page": "supplies",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Crimson draught",
+        "overflow": false
+      },
+      {
+        "name": "Refined lantern oil",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "844 armor",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Traveler’s Cloak Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "844 forge",
+    "page": "forge",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade",
+        "overflow": false
+      },
+      {
+        "name": "Wanderer’s Lantern",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "844 skills",
+    "page": "skills",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Sunburst Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Guiding Beacon ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "844 camp",
+    "page": "camp",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Tempered steel",
+        "overflow": false
+      },
+      {
+        "name": "Quickdraw",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "844 journal",
+    "page": "journal",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "An empty first page",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "844 modes",
+    "page": "modes",
+    "overflow": false,
+    "views": [
+      "modesScreen"
+    ],
+    "cards": [
+      {
+        "name": "The Six Beacons",
+        "overflow": false
+      },
+      {
+        "name": "The Debt of Dawn",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "1280 gameplay",
+    "page": "battle",
+    "overflow": false,
+    "views": [
+      "battleLayout"
+    ],
+    "cards": [],
+    "hud": true,
+    "fuel": true,
+    "nav": false,
+    "header": false,
+    "footer": false
+  },
+  {
+    "label": "save and return",
+    "page": "home",
+    "overflow": false,
+    "views": [
+      "homeScreen"
+    ],
+    "cards": [],
+    "hud": false,
+    "fuel": false,
+    "nav": false,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "continue expedition",
+    "page": "battle",
+    "overflow": false,
+    "views": [
+      "battleLayout"
+    ],
+    "cards": [],
+    "hud": true,
+    "fuel": true,
+    "nav": false,
+    "header": false,
+    "footer": false
+  },
+  {
+    "label": "390 gameplay",
+    "page": "battle",
+    "overflow": false,
+    "views": [
+      "battleLayout"
+    ],
+    "cards": [],
+    "hud": true,
+    "fuel": true,
+    "nav": false,
+    "header": false,
+    "footer": false
+  },
+  {
+    "label": "save and return",
+    "page": "home",
+    "overflow": false,
+    "views": [
+      "homeScreen"
+    ],
+    "cards": [],
+    "hud": false,
+    "fuel": false,
+    "nav": false,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "continue expedition",
+    "page": "battle",
+    "overflow": false,
+    "views": [
+      "battleLayout"
+    ],
+    "cards": [],
+    "hud": true,
+    "fuel": true,
+    "nav": false,
+    "header": false,
+    "footer": false
+  },
+  {
+    "label": "844 gameplay",
+    "page": "battle",
+    "overflow": false,
+    "views": [
+      "battleLayout"
+    ],
+    "cards": [],
+    "hud": true,
+    "fuel": true,
+    "nav": false,
+    "header": false,
+    "footer": false
+  },
+  {
+    "label": "save and return",
+    "page": "home",
+    "overflow": false,
+    "views": [
+      "homeScreen"
+    ],
+    "cards": [],
+    "hud": false,
+    "fuel": false,
+    "nav": false,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "continue expedition",
+    "page": "battle",
+    "overflow": false,
+    "views": [
+      "battleLayout"
+    ],
+    "cards": [],
+    "hud": true,
+    "fuel": true,
+    "nav": false,
+    "header": false,
+    "footer": false
+  },
+  {
+    "label": "save and return",
+    "page": "home",
+    "overflow": false,
+    "views": [
+      "homeScreen"
+    ],
+    "cards": [],
+    "hud": false,
+    "fuel": false,
+    "nav": false,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "awakened gear",
+    "page": "forge",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade",
+        "overflow": false
+      },
+      {
+        "name": "Wanderer’s Lantern",
+        "overflow": false
+      },
+      {
+        "name": "Traveler’s Cloak",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "saved awakened gear",
+    "page": "forge",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Iron Blade",
+        "overflow": false
+      },
+      {
+        "name": "Wanderer’s Lantern",
+        "overflow": false
+      },
+      {
+        "name": "Traveler’s Cloak",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "brann armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Traveler’s Cloak ",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Briarwarden Coat ",
+        "overflow": false
+      },
+      {
+        "name": "Moonweave Mantle ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "brann armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Warden’s Plate ",
+        "overflow": false
+      },
+      {
+        "name": "Dawnward Regalia ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "nyx armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Traveler’s Cloak ",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Briarwarden Coat ",
+        "overflow": false
+      },
+      {
+        "name": "Moonweave Mantle ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "nyx armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Warden’s Plate ",
+        "overflow": false
+      },
+      {
+        "name": "Dawnward Regalia ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "orin armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Traveler’s Cloak ",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Briarwarden Coat ",
+        "overflow": false
+      },
+      {
+        "name": "Moonweave Mantle ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "orin armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Warden’s Plate ",
+        "overflow": false
+      },
+      {
+        "name": "Dawnward Regalia ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "rook armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Traveler’s Cloak ",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Briarwarden Coat ",
+        "overflow": false
+      },
+      {
+        "name": "Moonweave Mantle ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "rook armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Warden’s Plate ",
+        "overflow": false
+      },
+      {
+        "name": "Dawnward Regalia ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "sera armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Traveler’s Cloak ",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Briarwarden Coat ",
+        "overflow": false
+      },
+      {
+        "name": "Moonweave Mantle ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "sera armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Warden’s Plate ",
+        "overflow": false
+      },
+      {
+        "name": "Dawnward Regalia ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "jax armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Traveler’s Cloak ",
+        "overflow": false
+      },
+      {
+        "name": "Ironbound Vest Equipped",
+        "overflow": false
+      },
+      {
+        "name": "Briarwarden Coat ",
+        "overflow": false
+      },
+      {
+        "name": "Moonweave Mantle ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  },
+  {
+    "label": "jax armor artwork",
+    "page": "armor",
+    "overflow": false,
+    "views": [
+      "managementScreen"
+    ],
+    "cards": [
+      {
+        "name": "Warden’s Plate ",
+        "overflow": false
+      },
+      {
+        "name": "Dawnward Regalia ",
+        "overflow": false
+      }
+    ],
+    "hud": false,
+    "fuel": false,
+    "nav": true,
+    "header": true,
+    "footer": true
+  }
+]

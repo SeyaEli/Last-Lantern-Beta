@@ -1,0 +1,36 @@
+{
+  "tool": "Built-in image_gen",
+  "transparent_background": true,
+  "assets": [
+    {
+      "id": "travel_cloak",
+      "file": "public/assets/armor/travel_cloak.png",
+      "prompt": "Create one production-ready isolated inventory item sprite for the dark fantasy pixel-art action RPG Last Lantern. Traveler's Cloak: a weathered moss-brown hooded wool cloak, layered leather shoulder straps, stitched tattered hem, bronze lantern clasp. Humble practical adventurer equipment. Muted olive brown and warm leather. Style: richly hand-painted 2D RPG inventory equipment, confident crisp pixel-like dark outlines, chunky readable forms, textured materials, strong warm upper-left edge highlights, deep dark shadows, matching a detailed painted pixel-art sword inventory sprite. Three-quarter front view, EMPTY wearable garment/armor with absolutely no person, no mannequin, no face, no hands, no legs. Entire item visible, centered, occupying about 80 percent of a square canvas with transparent margins. Sharp silhouette and enough material shading to remain legible at 64 to 96 pixels. True transparent background. No text, lettering, UI, border, panel, floor, cast shadow outside the item, or background scenery. Only the single equipment item."
+    },
+    {
+      "id": "iron_vest",
+      "file": "public/assets/armor/iron_vest.png",
+      "prompt": "Create one production-ready isolated inventory item sprite for the dark fantasy pixel-art action RPG Last Lantern. Ironbound Vest: a rugged sleeveless riveted iron cuirass with overlapping dark steel plates over oxblood leather, thick leather belt, bronze rivets, broad angular shoulder guards. Cold steel edge highlights. Style: richly hand-painted 2D RPG inventory equipment, confident crisp pixel-like dark outlines, chunky readable forms, textured materials, strong warm upper-left edge highlights, deep dark shadows, matching a detailed painted pixel-art sword inventory sprite. Three-quarter front view, EMPTY wearable garment/armor with absolutely no person, no mannequin, no face, no hands, no legs. Entire item visible, centered, occupying about 80 percent of a square canvas with transparent margins. Sharp silhouette and enough material shading to remain legible at 64 to 96 pixels. True transparent background. No text, lettering, UI, border, panel, floor, cast shadow outside the item, or background scenery. Only the single equipment item."
+    },
+    {
+      "id": "briar_coat",
+      "file": "public/assets/armor/briar_coat.png",
+      "prompt": "Create one production-ready isolated inventory item sprite for the dark fantasy pixel-art action RPG Last Lantern. Briarwarden Coat: an enchanted fitted forest coat made of layered dark bark plates, green leather and twisted thorn pauldrons, subtle emerald luminous seams, leaf-shaped bronze buckles, ragged deep-green cloth tails. Style: richly hand-painted 2D RPG inventory equipment, confident crisp pixel-like dark outlines, chunky readable forms, textured materials, strong warm upper-left edge highlights, deep dark shadows, matching a detailed painted pixel-art sword inventory sprite. Three-quarter front view, EMPTY wearable garment/armor with absolutely no person, no mannequin, no face, no hands, no legs. Entire item visible, centered, occupying about 80 percent of a square canvas with transparent margins. Sharp silhouette and enough material shading to remain legible at 64 to 96 pixels. True transparent background. No text, lettering, UI, border, panel, floor, cast shadow outside the item, or background scenery. Only the single equipment item."
+    },
+    {
+      "id": "moonweave",
+      "file": "public/assets/armor/moonweave.png",
+      "prompt": "Create one production-ready isolated inventory item sprite for the dark fantasy pixel-art action RPG Last Lantern. Moonweave Mantle: an elegant midnight-blue and plum robe-mantle, luxurious silver-threaded fabric with crescent-shaped silver shoulder clasps, moonstone blue jewel at the chest, layered long drapes, softly glowing icy blue trim. Style: richly hand-painted 2D RPG inventory equipment, confident crisp pixel-like dark outlines, chunky readable forms, textured materials, strong warm upper-left edge highlights, deep dark shadows, matching a detailed painted pixel-art sword inventory sprite. Three-quarter front view, EMPTY wearable garment/armor with absolutely no person, no mannequin, no face, no hands, no legs. Entire item visible, centered, occupying about 80 percent of a square canvas with transparent margins. Sharp silhouette and enough material shading to remain legible at 64 to 96 pixels. True transparent background. No text, lettering, UI, border, panel, floor, cast shadow outside the item, or background scenery. Only the single equipment item."
+    },
+    {
+      "id": "warden_plate",
+      "file": "public/assets/armor/warden_plate.png",
+      "prompt": "Create one production-ready isolated inventory item sprite for the dark fantasy pixel-art action RPG Last Lantern. Warden's Plate: a heavy citadel guardian breastplate, massive asymmetrical layered steel pauldrons, engraved iron ribs, dark chainmail, crimson cloth tabard hanging below, weathered silver metal with restrained antique-gold details. Style: richly hand-painted 2D RPG inventory equipment, confident crisp pixel-like dark outlines, chunky readable forms, textured materials, strong warm upper-left edge highlights, deep dark shadows, matching a detailed painted pixel-art sword inventory sprite. Three-quarter front view, EMPTY wearable garment/armor with absolutely no person, no mannequin, no face, no hands, no legs. Entire item visible, centered, occupying about 80 percent of a square canvas with transparent margins. Sharp silhouette and enough material shading to remain legible at 64 to 96 pixels. True transparent background. No text, lettering, UI, border, panel, floor, cast shadow outside the item, or background scenery. Only the single equipment item."
+    },
+    {
+      "id": "dawnward",
+      "file": "public/assets/armor/dawnward.png",
+      "prompt": "Create one production-ready isolated inventory item sprite for the dark fantasy pixel-art action RPG Last Lantern. Dawnward Regalia: a legendary gilded armor cuirass, radiant antique-gold angular shoulder armor shaped like sun rays, ivory cloth drapes, dark engraved gold breastplate with a brilliant small amber sun crystal, ornate but readable silhouette. Style: richly hand-painted 2D RPG inventory equipment, confident crisp pixel-like dark outlines, chunky readable forms, textured materials, strong warm upper-left edge highlights, deep dark shadows, matching a detailed painted pixel-art sword inventory sprite. Three-quarter front view, EMPTY wearable garment/armor with absolutely no person, no mannequin, no face, no hands, no legs. Entire item visible, centered, occupying about 80 percent of a square canvas with transparent margins. Sharp silhouette and enough material shading to remain legible at 64 to 96 pixels. True transparent background. No text, lettering, UI, border, panel, floor, cast shadow outside the item, or background scenery. Only the single equipment item."
+    }
+  ]
+}

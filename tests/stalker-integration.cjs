@@ -48,6 +48,7 @@ module.exports=function({t,check,reset,els,fs,path,root,assert}){
  });
  check('old expeditions retain ordinary Wisps while corrupt or foreign Stalker saves are rejected',()=>{
   const r=scene(),e=stalker(r);charge(r,e);const data=t.packRun(r);for(const modify of [s=>s.state.enemies[0].stalker.left=99,s=>s.state.enemies[0].stalker.side=0,s=>s.state.enemies[0].stalker.state='fake',s=>s.state.enemies[0].stalker.speed=999,s=>s.state.enemies[0].boss=true,s=>s.state.enemies[0].elite=true,s=>s.state.enemies[0].chapter=2,s=>s.state.enemies[0].type=3,s=>delete s.state.enemies[0].archetype,s=>delete s.state.enemies[0].stalker]){const bad=JSON.parse(JSON.stringify(data));modify(bad);assert(!t.validExpedition(bad))}
+  const crowded=JSON.parse(JSON.stringify(data));crowded.state.enemies=Array.from({length:4},()=>JSON.parse(JSON.stringify(data.state.enemies[0])));assert(!t.validExpedition(crowded));crowded.state.enemies.length=2;assert(!t.validExpedition(crowded));
   data.state.enemies[0].archetype=undefined;delete data.state.enemies[0].stalker;t.leaveToHome();assert(t.resumeRun(data));assert(!t.run.enemies[0].stalker);assert.equal(t.run.enemies[0].type,0);finish();
  });
  check('arrival grace and empty fuel preserve fair warnings and never apply automatic damage',()=>{

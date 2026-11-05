@@ -1,0 +1,38 @@
+[
+  {
+    "id": "travel_cloak",
+    "width": 1254,
+    "height": 1254,
+    "transparent": true
+  },
+  {
+    "id": "iron_vest",
+    "width": 1254,
+    "height": 1254,
+    "transparent": true
+  },
+  {
+    "id": "briar_coat",
+    "width": 1254,
+    "height": 1254,
+    "transparent": true
+  },
+  {
+    "id": "moonweave",
+    "width": 1254,
+    "height": 1254,
+    "transparent": true
+  },
+  {
+    "id": "warden_plate",
+    "width": 1254,
+    "height": 1254,
+    "transparent": true
+  },
+  {
+    "id": "dawnward",
+    "width": 1254,
+    "height": 1254,
+    "transparent": true
+  }
+]

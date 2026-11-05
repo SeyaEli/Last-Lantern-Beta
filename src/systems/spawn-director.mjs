@@ -1,3 +1,5 @@
+import {WARDEN_CONFIG} from './void-warden.mjs';
+import {MIMIC_CONFIG} from './spectral-mimic.mjs';
 import {EATER_CONFIG,fuelPressure} from './lantern-eater.mjs';
 import {STALKER_CONFIG} from './shadow-stalker.mjs';
 // Independent random streams keep rendering and loot from changing wave composition.
@@ -36,7 +38,7 @@ export function validDirector(d){
   return p===null||!!p&&Number.isSafeInteger(p.budget)&&p.budget>=0&&p.budget<=1000&&Number.isSafeInteger(p.spent)&&p.spent>=0&&p.spent<=p.budget&&
     (p.pressure===undefined||['steady','low','critical','empty'].includes(p.pressure))&&
     Array.isArray(p.entries)&&p.entries.length<=DIRECTOR_CONFIG.maxActive&&p.entries.every(e=>e&&Number.isInteger(e.type)&&e.type>=0&&e.type<=4&&typeof e.elite==='boolean'&&
-      (e.archetype===undefined||e.archetype===EATER_CONFIG.archetype&&e.type===3&&!e.elite||e.archetype===STALKER_CONFIG.archetype&&e.type===STALKER_CONFIG.type&&!e.elite))&&
+      (e.archetype===undefined||e.archetype===WARDEN_CONFIG.archetype&&e.type===2&&!e.elite||e.archetype===MIMIC_CONFIG.archetype&&e.type===3&&!e.elite||e.archetype===EATER_CONFIG.archetype&&e.type===3&&!e.elite||e.archetype===STALKER_CONFIG.archetype&&e.type===STALKER_CONFIG.type&&!e.elite))&&
     p.spent===p.entries.reduce((n,e)=>n+directorEntryCost(e),0);
 }
 export function directorRandom(d,stream='composition'){
@@ -47,9 +49,9 @@ export function directorRandom(d,stream='composition'){
 }
 export function directorPhase(elapsed){return Math.min(5,Math.max(0,Math.floor(elapsed/30)))}
 export function threatBudget(elapsed,difficulty=1){return Math.floor((8+35*Math.pow(Math.min(1,Math.max(0,elapsed/180)),1.6))*difficulty)}
-export function directorEntryCost(e){return e.elite?DIRECTOR_CONFIG.eliteCost:e.archetype===EATER_CONFIG.archetype?EATER_CONFIG.cost:e.archetype===STALKER_CONFIG.archetype?STALKER_CONFIG.cost:DIRECTOR_CONFIG.costs[e.type]}
+export function directorEntryCost(e){return e.elite?DIRECTOR_CONFIG.eliteCost:e.archetype===WARDEN_CONFIG.archetype?WARDEN_CONFIG.cost:e.archetype===MIMIC_CONFIG.archetype?MIMIC_CONFIG.cost:e.archetype===EATER_CONFIG.archetype?EATER_CONFIG.cost:e.archetype===STALKER_CONFIG.archetype?STALKER_CONFIG.cost:DIRECTOR_CONFIG.costs[e.type]}
 /** A budget is spent once at a scheduled interval / Story wave, never per render frame. */
-export function planDirectorWave(d,{elapsed=0,maxCount=14,legacy=false,elite=false,allowEaters=false,allowStalkers=false,fuel=100,chapter=1,eaterCount=0,stalkerCount=0}={}){
+export function planDirectorWave(d,{elapsed=0,maxCount=14,legacy=false,elite=false,allowEaters=false,allowStalkers=false,allowMimics=false,mimicCount=0,allowWardens=false,wardenCount=0,fuel=100,chapter=1,eaterCount=0,stalkerCount=0}={}){
   const count=Math.max(0,Math.min(DIRECTOR_CONFIG.maxActive,Math.floor(maxCount))),phase=directorPhase(elapsed);
   const budget=Math.min(1000,Math.max(legacy?Math.ceil(count*2.5):0,threatBudget(elapsed,DIRECTOR_CONFIG.difficulties[d.difficulty])));
   const entries=[];let spent=0;
@@ -57,8 +59,12 @@ export function planDirectorWave(d,{elapsed=0,maxCount=14,legacy=false,elite=fal
   const pressure=fuelPressure(fuel);
   let eaterWanted=allowEaters&&phase>=EATER_CONFIG.firstPhase&&fuel>0&&eaterCount<EATER_CONFIG.maxAlive&&entries.length<count&&directorRandom(d)<EATER_CONFIG.chance[pressure];
   let stalkerWanted=allowStalkers&&chapter===STALKER_CONFIG.chapter&&phase>=STALKER_CONFIG.firstPhase&&stalkerCount<STALKER_CONFIG.maxAlive&&entries.length<count&&directorRandom(d)<STALKER_CONFIG.chance[pressure];
+  let mimicWanted=allowMimics&&phase>=MIMIC_CONFIG.firstPhase&&mimicCount<MIMIC_CONFIG.maxAlive&&entries.length<count&&directorRandom(d)<MIMIC_CONFIG.chance;
+  let wardenWanted=allowWardens&&phase>=WARDEN_CONFIG.firstPhase&&wardenCount<WARDEN_CONFIG.maxAlive&&entries.length<count&&directorRandom(d)<WARDEN_CONFIG.chance;
   while(entries.length<count){
     const remaining=count-entries.length-1,reserve=legacy?remaining:0;
+    if(wardenWanted&&WARDEN_CONFIG.cost<=budget-spent-reserve){entries.push({type:2,elite:false,archetype:WARDEN_CONFIG.archetype});spent+=WARDEN_CONFIG.cost;wardenWanted=false;continue}
+    if(mimicWanted&&MIMIC_CONFIG.cost<=budget-spent-reserve){entries.push({type:3,elite:false,archetype:MIMIC_CONFIG.archetype});spent+=MIMIC_CONFIG.cost;mimicWanted=false;continue}
     if(eaterWanted&&EATER_CONFIG.cost<=budget-spent-reserve){entries.push({type:3,elite:false,archetype:EATER_CONFIG.archetype});spent+=EATER_CONFIG.cost;eaterWanted=false;continue}
     if(stalkerWanted&&STALKER_CONFIG.cost<=budget-spent-reserve){entries.push({type:STALKER_CONFIG.type,elite:false,archetype:STALKER_CONFIG.archetype});spent+=STALKER_CONFIG.cost;stalkerWanted=false;continue}
     const weighted=[...DIRECTOR_CONFIG.phases[phase].pool];

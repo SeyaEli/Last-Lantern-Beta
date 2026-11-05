@@ -53,7 +53,7 @@ module.exports=function({t,check,reset,els,fs,path,root,assert}){
  });
  check('defeated runners cancel their attack and existing brute charge mechanics remain available',()=>{
   const r=scene(),e=runner(r);charge(r,e);for(let i=0;i<14;i++)t.update(.05);t.hit(e,1e9);assert(e.hp<=0);assert.equal(e.runner.reason,'defeated');const hp=r.hp;for(let i=0;i<10;i++)t.update(.05);assert.equal(r.hp,hp);
-  const brute=t.spawnEnemy(false,4);assert(brute);brute.x=r.x+100;brute.y=r.y;brute.stun=0;brute.chargeCd=0;t.update(.05);assert(brute.chargeWindup>0);assert(brute.charging>0);assert(!brute.runner);finish();
+  const brute=t.spawnEnemy(false,4);assert(brute);brute.x=r.x+100;brute.y=r.y;brute.stun=0;brute.brute.cooldown=0;t.update(.05);assert.equal(brute.brute.state,'windup');assert.equal(brute.brute.left,.9);assert(!brute.runner);finish();
  });
  check('native runner warning and rush animations draw without changing attack state or blocking frames',()=>{
   const r=scene(),e=runner(r);charge(r,e);const before=JSON.stringify(e.runner),hp=r.hp;t.draw(r.time);assert.equal(JSON.stringify(e.runner),before);assert.equal(r.hp,hp);fs.writeFileSync(path.join(root,'tests/runner-warning-field.png'),t.ctx.canvas.toBuffer('image/png'));

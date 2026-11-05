@@ -7,6 +7,10 @@ assert(!engine.includes('data:image'));assert(!engine.includes('requestAnimation
 assert(engine.includes("SAVE_KEY='last-lantern-v2'"),'keep save import compatibility');
 const lantern=spawnSync(process.execPath,[path.join(root,'tests/lantern.test.mjs')],{cwd:root,stdio:'inherit'});
 if(lantern.status!==0)process.exit(lantern.status??1);
+const supplies=spawnSync(process.execPath,[path.join(root,'tests/supplies.test.mjs')],{cwd:root,stdio:'inherit'});
+if(supplies.status!==0)process.exit(supplies.status??1);
+const motion=spawnSync(process.execPath,[path.join(root,'tests/motion.test.mjs')],{cwd:root,stdio:'inherit'});
+if(motion.status!==0)process.exit(motion.status??1);
 const combat=spawnSync(process.execPath,[path.join(root,'tests/combat.test.mjs')],{cwd:root,stdio:'inherit'});
 if(combat.status!==0)process.exit(combat.status??1);
 const director=spawnSync(process.execPath,[path.join(root,'tests/director.test.mjs')],{cwd:root,stdio:'inherit'});
@@ -17,5 +21,13 @@ const runner=spawnSync(process.execPath,[path.join(root,'tests/runner.test.mjs')
 if(runner.status!==0)process.exit(runner.status??1);
 const stalker=spawnSync(process.execPath,[path.join(root,'tests/stalker.test.mjs')],{cwd:root,stdio:'inherit'});
 if(stalker.status!==0)process.exit(stalker.status??1);
-const result=spawnSync(process.execPath,[path.join(root,'tests/gameplay.cjs')],{cwd:root,stdio:'inherit'});
+const archer=spawnSync(process.execPath,[path.join(root,'tests/archer.test.mjs')],{cwd:root,stdio:'inherit'});
+if(archer.status!==0)process.exit(archer.status??1);
+const brute=spawnSync(process.execPath,[path.join(root,'tests/brute.test.mjs')],{cwd:root,stdio:'inherit'});
+if(brute.status!==0)process.exit(brute.status??1);
+const mimic=spawnSync(process.execPath,[path.join(root,'tests/mimic.test.mjs')],{cwd:root,stdio:'inherit'});
+if(mimic.status!==0)process.exit(mimic.status??1);
+const warden=spawnSync(process.execPath,[path.join(root,'tests/warden.test.mjs')],{cwd:root,stdio:'inherit'});
+if(warden.status!==0)process.exit(warden.status??1);
+const result=spawnSync(process.execPath,['--expose-gc',path.join(root,'tests/gameplay.cjs')],{cwd:root,stdio:'inherit'});
 process.exit(result.status??1);

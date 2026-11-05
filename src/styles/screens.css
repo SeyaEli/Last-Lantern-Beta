@@ -1,0 +1,111 @@
+/* A fixed game shell. Collections use pages; only reading dialogs may scroll. */
+html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+body{padding:0}
+.shell{width:100%;max-width:none;height:100dvh;min-height:0;margin:0;padding:16px 28px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.shell>header{flex:0 0 auto;margin:0;min-height:52px}
+.world-nav{flex:0 0 auto;margin:0;padding:0 0 10px;gap:6px;flex-wrap:nowrap}
+.world-nav button{flex:1;min-width:0;padding:8px;font-size:14px}
+.footer{flex:0 0 auto;margin:0;min-height:24px;font-size:12px}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.screen-heading{flex:0 0 auto;margin:4px 0 14px;gap:12px;align-items:center}
+.screen-heading h2{font-size:clamp(24px,3vw,38px);margin:2px 0 5px}
+.screen-heading .chapter{margin:0}.screen-heading p{font-size:14px}
+.screen-note{font-size:12px;margin:8px 0 0;flex:0 0 auto}
+.screen-pager{display:flex;align-items:center;justify-content:center;gap:22px;flex:0 0 46px;margin-top:10px}
+.screen-pager button{min-width:110px;min-height:44px}.screen-pager span{min-width:45px;text-align:center;color:var(--gold)}
+#managementContent{flex:1;min-height:0;overflow:hidden}
+#managementContent #shop,.mode-grid{height:100%;min-height:0;display:grid;grid-template-columns:repeat(var(--screen-columns,3),minmax(0,1fr));grid-template-rows:auto minmax(0,1fr);gap:14px;overflow:hidden}
+.mode-grid{grid-template-rows:minmax(0,1fr)}
+#managementContent #shop>.tab-intro{font-size:13px;line-height:1.4;max-width:90ch;grid-column:1/-1}
+#managementContent #shop>article,.mode-grid>article{min-height:0;min-width:0;margin:0;padding:18px;display:flex;flex-direction:column;gap:10px;overflow:hidden;background:linear-gradient(155deg,#2b424659,var(--panel) 60%);border-color:#56716f}
+#managementContent .item-top{margin:0;gap:12px;flex:0 0 auto}#managementContent .item-top h3{font-size:17px;flex-wrap:wrap}
+#managementContent .hero-art{height:clamp(90px,18vh,160px);width:110px}
+#managementContent .weapon-art{height:100px;width:80px}
+#managementContent .item>p{line-height:1.45;font-size:14px}
+#managementContent .item-bottom,#managementContent .skill-buttons{margin-top:auto!important;flex:0 0 auto}
+#managementContent .skill-art{width:52px;height:52px}
+#managementContent .upgrade-card h3{font-size:19px}
+#managementContent .upgrade-card{gap:10px}
+#managementContent #shop.journal-list{display:grid!important}
+#managementContent .journal-entry{max-width:none;line-height:1.55}
+#managementContent .journal-entry h3{font-size:24px}.journal-entry p{font-size:15px;line-height:1.65}
+#managementContent .journal-entry p{overflow:hidden;min-height:0;flex:1;display:-webkit-box;-webkit-line-clamp:8;-webkit-box-orient:vertical}#managementContent .journal-entry h3{flex:0 0 auto}#managementContent .read-entry{margin-top:auto;align-self:flex-start;flex:0 0 auto;min-height:44px}#screenReader article{border:0;padding:0}#screenReader>button{margin-top:18px;min-height:44px}
+.mode-card ul{margin:8px 0 12px;padding-left:18px;font-size:14px}.mode-card h3{font-size:26px;margin:5px 0}.mode-card>p{font-size:14px;line-height:1.45}.mode-card button{margin-top:auto}.mode-grid .mode-card:last-child{grid-column:auto}
+.mode-card ul{font-size:13px;line-height:1.4}.mode-card li{line-height:1.4}.mode-card .small{font-size:12px;margin-top:5px}
+/* Title screen: the world is the backdrop and the navigation is a game menu. */
+body[data-page=home] .world-nav{display:none}
+body[data-page=home] header .brand{visibility:hidden}
+.title-scene{flex:1;min-height:0!important;border:0;background-position:center;display:flex;align-items:center}
+.title-copy{width:50%;max-width:620px;padding:20px 5%}
+.title-copy .official-logo{max-height:30dvh;object-position:left center;width:100%;max-width:400px}
+.title-copy .game-logo-title{margin:0 0 12px}.title-story{font-size:18px;line-height:1.5}
+.title-copy .home-footnote{margin-top:18px;font-size:12px}
+.home-actions{gap:10px}.home-actions button{min-height:48px;padding:10px 25px}
+.home-hero{right:26%;height:55%;width:30%;bottom:8%;opacity:.9}
+.home-caption{right:29%;bottom:4%;font-size:12px}
+.home-menu{position:absolute;right:4%;top:50%;transform:translateY(-50%);width:23%;display:flex;flex-direction:column;gap:8px}
+.home-menu button{min-height:54px;text-align:left;background:#12252bd9;border-color:#59716a;padding:10px 18px;color:var(--text);font-size:19px}
+.home-menu button span{display:block;color:var(--muted);font:12px 'Segoe UI',sans-serif;margin-top:3px}
+/* Play owns the viewport. All HUD panels live over the same scaled stage. */
+body.playing{background:#070f14}body.playing .shell{padding:0;display:block}
+body.playing .shell>header,body.playing .world-nav,body.playing .footer,body.playing #directorStatus{display:none!important}
+#battleLayout{position:fixed;inset:0;max-width:none;margin:0;display:grid;place-items:center;overflow:hidden;z-index:1}
+#battleLayout>.left{width:100%;height:100%;display:grid;place-items:center;min-height:0}
+#battleLayout .arena-panel{width:min(100vw,160dvh);aspect-ratio:8/5;max-height:100dvh;overflow:hidden;border:0;border-radius:0;margin:0}
+#battleLayout .arena{width:100%;height:100%;min-height:0;max-height:none;aspect-ratio:8/5;border:0;position:relative;overflow:hidden}
+#game{width:100%!important;height:100%!important;display:block}
+#battleLayout .arena-heading,#battleLayout .hint-bar{display:none}
+#arena .hud{top:12px;left:14px;right:14px}.hud .hp-box{width:190px}.hud .hud-mid{max-width:180px}.hud .hud-right{align-items:center}
+#arena .lantern-panel{position:absolute;left:14px;top:104px;width:210px;max-width:30%;margin:0;padding:8px 10px;display:grid;grid-template-columns:1fr;gap:5px;border:1px solid #49615f;background:#14272ae8;font-size:12px}
+#lanternPanel label{justify-content:space-between;font-size:12px;gap:5px}#lanternPanel progress{width:100%;height:9px}#lanternPanel button{margin:0;padding:6px;min-height:34px;font-size:12px}#lanternPanel #lanternNotice{display:none}#lanternPanel #fuelThreatNotice{font-size:11px;line-height:1.3;margin:0}
+#arena .objective-hud{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:min(46%,450px);margin:0;padding:7px 10px;font-size:12px;line-height:1.4;background:#14272ad9;border:1px solid #49615f;pointer-events:none}
+#arena .adventure-controls{position:absolute;right:14px;top:76px;max-width:230px;margin:0;display:flex;gap:5px;justify-content:flex-end}
+#arena .adventure-controls button{min-height:34px;padding:6px 9px;font-size:12px}#arena .adventure-controls #storyInteract{min-width:0;width:100%;flex:1 1 100%;text-align:right}#arena .adventure-controls p{display:none}
+#arena .bossbar{top:12px;left:29%;right:29%;font-size:12px;padding:5px;max-width:42%}#arena .hud:has(~.bossbar:not(.hidden)) .hud-mid{visibility:hidden}
+#arena .skill-dock{bottom:14px;right:14px}#arena .skill-dock button{min-height:48px}
+dialog{width:min(600px,calc(100vw - 24px));max-height:calc(100dvh - 24px)}
+@media(max-width:700px){
+ .shell{padding:10px 12px;gap:8px}.brand h1{font-size:18px}.brand-logo{width:44px;height:33px}.brand p{display:none}.shell>header{min-height:44px}.header-actions button{padding:6px 10px}.world-nav{gap:3px;padding-bottom:6px}.world-nav button{font-size:11px;padding:6px 3px;min-height:44px}.footer>span{display:none}.footer{justify-content:center}.screen-heading{margin:0 0 8px}.screen-heading .chapter{display:none}.screen-heading h2{font-size:26px}.screen-heading p{font-size:12px}.screen-heading button{font-size:12px;padding:8px}
+ .title-scene{align-items:flex-start}.title-copy{width:100%;padding:12px 6%;}.title-copy .official-logo{max-height:21dvh;max-width:270px}.title-story{font-size:15px}.title-copy .home-footnote{display:none}.title-copy .home-actions{margin:12px 0 8px}.home-actions button{padding:8px 18px}.home-hero{right:-8%;bottom:10%;height:42%;width:58%;opacity:.5}.home-caption{display:none}.home-menu{left:6%;right:auto;top:auto;bottom:16px;transform:none;width:55%;gap:5px}.home-menu button{min-height:42px;font-size:15px;padding:7px 12px}.home-menu button span{display:none}
+ #managementContent #shop,.mode-grid{gap:8px}#managementContent #shop>article,.mode-grid>article{padding:14px}.screen-note{font-size:11px}.mode-card ul{font-size:13px}.mode-card h3{font-size:24px}.screen-pager{margin-top:6px;flex-basis:44px}
+ #arena .hud{top:6px;left:6px;right:6px;gap:4px}#arena .hp-box{width:118px;padding:4px 6px;font-size:11px}.hp-label{font-size:11px}#arena .hud-mid{padding:3px;min-width:65px;font-size:11px}#arena .timer{font-size:15px}#arena .run-coins{font-size:11px;padding:5px}#arena .hud-right button{padding:6px;min-height:34px}#arena .bossbar{top:68px;left:30%;right:20%;max-width:50%;font-size:10px}
+ #arena .lantern-panel{left:6px;top:77px;width:118px;max-width:32%;padding:5px;gap:3px}#lanternPanel label{font-size:10px;flex-wrap:wrap}#lanternPanel button{font-size:10px;min-height:28px;padding:3px}#arena .adventure-controls{right:6px;top:46px;max-width:170px}#arena .adventure-controls button{font-size:10px;padding:4px;min-height:28px}#arena .objective-hud{bottom:68px;left:50%;width:60%;font-size:10px;padding:4px}#arena .skill-dock{bottom:6px;right:6px;gap:4px}#arena .skill-dock button{min-width:60px;padding:5px;font-size:11px;min-height:42px}.skill-dock kbd{display:none}
+}
+@media(max-height:620px){
+ .shell{padding:8px 16px;gap:6px}.shell>header{min-height:40px}.brand-logo{height:32px;width:44px}.brand p{display:none}.brand h1{font-size:19px}.world-nav{padding-bottom:5px}.world-nav button{min-height:38px;padding:5px}.screen-heading{margin:0 0 6px}.screen-heading h2{font-size:24px}.screen-heading .chapter{display:none}.screen-pager{flex-basis:38px;margin-top:6px}.screen-pager button{min-height:36px;padding:5px 12px}.footer{font-size:11px;min-height:20px}
+ #managementContent .hero-art{height:85px;width:70px}#managementContent .weapon-art{height:70px;width:55px}#managementContent #shop>article,.mode-grid>article{padding:12px;gap:6px}#managementContent .item>p{font-size:12px}#managementContent .item-top h3{font-size:15px}#managementContent .skill-art{display:none}#managementContent .upgrade-card h3{font-size:16px}.mode-card ul{display:none}.mode-card h3{font-size:21px}.mode-card>p{font-size:12px}.title-story,.title-copy .home-footnote{display:none}.title-copy .official-logo{max-height:35dvh}.home-menu{gap:5px}.home-menu button{min-height:42px;font-size:16px}.home-menu button span{display:none}
+}
+@media(max-height:480px){
+ body:not(.playing) .shell{display:grid;grid-template-columns:112px minmax(0,1fr);grid-template-rows:40px minmax(0,1fr) 20px;gap:6px 12px}
+ .shell>header{grid-column:1/-1;grid-row:1}.shell>.footer{grid-column:1/-1;grid-row:3}
+ .world-nav{grid-column:1;grid-row:2;flex-direction:column;gap:3px;border:0;padding:0}.world-nav button{min-height:28px;padding:3px;text-align:left;font-size:12px}
+ .screen{grid-column:2;grid-row:2}.title-scene{grid-column:1/-1;grid-row:2}
+ .screen-heading{min-height:35px;flex-wrap:nowrap;align-items:center}.screen-heading h2{font-size:21px;margin:0}.screen-heading p{display:none}.screen-heading button{min-height:32px;font-size:11px;padding:5px}
+ #managementContent #shop{grid-template-rows:minmax(0,1fr)}#managementContent #shop>.tab-intro{display:none}
+ #managementContent .item-top .hero-art{height:70px;width:60px}#managementContent .item>p{font-size:12px;line-height:1.35}#managementContent .item .badge{font-size:10px}#managementContent .item-bottom button,#managementContent .skill-buttons button{min-height:34px;padding:5px 8px;font-size:12px}
+ #managementContent .upgrade-card{gap:5px}#managementContent .upgrade-card h3{font-size:15px}.upgrade-level{font-size:11px}.mode-card>p{font-size:12px;line-height:1.35}.mode-card h3{font-size:20px}.mode-card .small,.screen-note{display:none}.mode-card button{min-height:34px;padding:5px;font-size:12px}
+ .home-menu{width:25%;gap:4px}.home-menu button{min-height:34px;padding:5px 12px;font-size:14px}.title-copy .home-actions{margin:10px 0 6px}.title-copy .chapter{margin-bottom:0;font-size:12px}.title-copy .official-logo{max-height:29dvh}.title-copy{padding:8px 4%}.title-copy .game-logo-title{margin:0}.home-actions button{min-height:38px;padding:7px 18px}
+ body:not([data-page=home]) .world-nav{grid-row:1/4}body:not([data-page=home]) .shell>header,body:not([data-page=home]) .shell>.footer{grid-column:2}
+ .world-nav button{min-height:44px}.screen-pager{flex-basis:44px}.screen-pager button,.home-menu button{min-height:44px}
+}
+@media(max-width:700px) and (orientation:portrait){
+ #battleLayout .arena-panel,#battleLayout .arena{width:100vw;height:100dvh;max-height:none;aspect-ratio:auto}
+ #game{position:absolute;left:50%;top:0;transform:translateX(-50%);width:160dvh!important;height:100dvh!important;max-width:none}
+ #arena .hp-box{width:128px}#arena #level{font-size:10px;white-space:nowrap}#arena .lantern-panel{top:88px;max-width:none;width:128px}
+ #arena .objective-hud{bottom:90px;width:92%;font-size:11px;padding:6px 8px}
+ #arena .bossbar{top:205px;left:10px;right:10px;max-width:none;font-size:12px}
+ #arena .adventure-controls{top:82px}#arena .adventure-controls button{min-height:36px}
+ #arena .skill-dock button{min-height:48px;min-width:76px}#arena .run-banner{font-size:18px}
+}
+/* Content-sized cards: empty viewport space belongs to the scene, not the tile. */
+#managementContent #shop,.mode-grid{grid-template-columns:repeat(var(--screen-columns,3),minmax(0,300px));grid-template-rows:auto repeat(var(--screen-rows,1),minmax(0,max-content));align-content:start;justify-content:center;gap:12px}
+.mode-grid{grid-template-rows:repeat(var(--screen-rows,1),minmax(0,max-content))}
+#managementContent #shop.journal-list{grid-template-columns:minmax(0,680px)}
+@media(min-height:481px){
+ #managementContent #shop>article,.mode-grid>article{padding:14px;gap:8px;align-self:stretch}
+ #managementContent .item-top{gap:10px}#managementContent .hero-art{width:78px;height:96px}#managementContent .weapon-art{width:62px;height:78px}
+ #managementContent .skill-art{width:38px;height:38px}#managementContent .upgrade-card{gap:8px}#managementContent .upgrade-card h3{font-size:17px}
+ .mode-card h3{font-size:23px;margin:3px 0}.mode-card ul{margin:6px 0 8px}.mode-card>p{font-size:13px;line-height:1.4}
+ .home-menu{max-width:248px}.home-menu button{font-size:17px;padding:8px 14px;min-height:48px}.home-menu button span{margin-top:2px}
+}
+@media(max-height:480px){#managementContent #shop{grid-template-rows:repeat(var(--screen-rows,1),minmax(0,max-content))}}

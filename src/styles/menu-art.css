@@ -1,0 +1,42 @@
+/* The menu belongs to the same ruined world as the arena. */
+body:not(.playing):not([data-page=home]) .shell{position:relative;isolation:isolate}
+body:not(.playing):not([data-page=home]) .shell::before{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;background:linear-gradient(90deg,#0a171de8,#0a171da6 55%,#0a171d80),linear-gradient(0deg,#08151dd9,transparent 70%),var(--menu-scene);background-size:cover;background-position:center}
+body:not(.playing):not([data-page=home]) .shell::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 73% 80%,#cf9c4b17,transparent 45%),repeating-linear-gradient(0deg,transparent 0 3px,#05101710 3px 4px)}
+.screen-heading{padding:10px 14px 10px 18px;border-left:2px solid #b69a62;background:linear-gradient(90deg,#102027ed,#102027a8 50%,transparent)}
+.screen-heading .chapter{color:#e9c98e}.screen-heading h2{text-shadow:0 2px 8px #0009}
+.world-nav{border-bottom-color:#9b8d6659}.world-nav button{background:#0e2027c9;border-color:#667b757d}.world-nav button[aria-current=page]{background:linear-gradient(180deg,#4a4430d9,#253734ed);border-color:#c1a269;color:#ffe3a7;box-shadow:inset 0 -2px #b69a62}
+#managementContent #shop>.tab-intro{color:#d1d8cb;text-shadow:0 1px 4px #000}
+#managementContent #shop>article,.mode-grid>article{position:relative;isolation:isolate;border-color:#887e5a8c;background:linear-gradient(135deg,#20343af5,#101f29f5);box-shadow:0 4px 14px #0004,inset 0 0 0 3px #07141b66}
+#managementContent #shop>article::before,.mode-grid>article::before{content:'';position:absolute;left:5px;top:5px;width:12px;height:12px;border-left:1px solid #c4a778;border-top:1px solid #c4a778;pointer-events:none}
+#managementContent #shop>article::after,.mode-grid>article::after{content:'';position:absolute;right:5px;bottom:5px;width:12px;height:12px;border-right:1px solid #c4a778;border-bottom:1px solid #c4a778;pointer-events:none}
+#managementContent #shop>article>*:not(.card-watermark),.mode-grid>article>*:not(.card-watermark){position:relative;z-index:1}
+.card-watermark{position:absolute!important;right:-12px;top:12px;width:100px;height:100px;color:#cfb97d;opacity:.065;pointer-events:none;z-index:0;transform:rotate(-12deg)}
+.card-watermark svg{width:100%;height:100%}
+.skill-emblem{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;color:#f6d58e;background:radial-gradient(circle,#d4a34f30,#101f2a 73%);border:1px solid #9f895b;border-radius:7px;box-shadow:inset 0 0 0 2px #0c1a25,0 0 12px #d4a34f14}
+.skill-emblem svg{width:30px;height:30px;filter:drop-shadow(0 0 3px #c9a55744)}
+#managementContent .skill-card:nth-of-type(3n+2) .skill-emblem{color:#b5dec9;border-color:#71998a;background:radial-gradient(circle,#87c7a32b,#101f2a 73%)}
+#managementContent .skill-card:nth-of-type(3n) .skill-emblem{color:#d1c4f0;border-color:#9185ad;background:radial-gradient(circle,#a98cce30,#101f2a 73%)}
+#managementContent #shop>.item.selected,#managementContent #shop>.item.equipped{border-color:#c0a16b;background:linear-gradient(135deg,#3a432fee,#13292bf5);box-shadow:0 4px 18px #0005,inset 0 0 0 3px #be9e5a20}
+#managementContent .hero-art,#managementContent .weapon-art{background:radial-gradient(ellipse at 50% 70%,#bfaa6b26,transparent 68%);border-bottom:1px solid #ac98623d}
+.mode-grid>article{background-image:linear-gradient(180deg,#10212a8c,#10212aeb 100px,#10212afa 180px),var(--card-scene);background-size:cover;background-position:center}
+.mode-number{color:#ffe1a0;text-shadow:0 1px 5px #000}.mode-card h3{color:#fff0cf;text-shadow:0 2px 5px #000}
+.screen-pager button{background:#10242ce8;border-color:#92815b8c}.screen-pager span{color:#ffe1a0;text-shadow:0 1px 5px #000}
+.footer{color:#c9d4ca;text-shadow:0 1px 5px #000}.footer button{background:#10242cd9}
+@media(hover:hover){#managementContent #shop>article:hover,.mode-grid>article:hover{border-color:#c4a778;box-shadow:0 6px 20px #0005,inset 0 0 0 3px #b69a621a}}
+@media(max-height:620px){.screen-heading{padding:5px 10px}.skill-emblem{width:28px;height:28px;flex-basis:28px}.skill-emblem svg{width:22px;height:22px}}
+@media(max-height:480px){.skill-emblem{position:absolute!important;right:10px;top:10px;opacity:.35;z-index:0!important;pointer-events:none}.screen-heading{padding:4px 8px}}
+.armor-art{width:42px;height:42px;display:grid;place-items:center;flex:0 0 42px;color:#c7d3de;background:radial-gradient(circle,#acbdce26,transparent 72%)}.armor-art svg{width:100%;height:100%}
+.gear-heading{display:flex;align-items:center;gap:10px}.gear-heading h3{margin:0}.forge-art{width:42px;height:48px;object-fit:contain;image-rendering:pixelated}.gear-heading>div{min-width:0}
+.gear-stars{display:flex;gap:2px;align-items:center;color:#6b7b7e;font-size:14px;line-height:20px;flex:0 0 auto}.gear-stars .lit{color:#ffd381;text-shadow:0 0 5px #b98c4255}.gear-stars strong{margin-left:6px;color:#c9d7d0;font-size:11px;font-weight:500}.gear-stars.awakened .lit,.gear-stars.awakened strong{color:#d9c2ff}.gear-preview{color:#ddc58f;font-size:12px!important}.equipment-build{border-left:2px solid #c7a56b;padding-left:12px}
+#managementContent #shop>.gear-awakened{border-color:#b596e2;background:linear-gradient(135deg,#3c3253f2,#142632f5);box-shadow:0 0 18px #9a68d022,inset 0 0 0 3px #be9ad922}
+@media(max-width:700px) and (orientation:portrait){.home-menu{display:grid;grid-template-columns:1fr 1fr;width:88%;max-width:none;gap:6px}.home-menu button{font-size:13px;min-height:44px}.world-nav button{font-size:10px}}
+@media(max-height:480px){.world-nav{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(44px,1fr)}.world-nav button{font-size:10px;text-align:center}.home-menu{display:grid;grid-template-columns:1fr 1fr;width:44%;max-width:none}.home-menu button{font-size:12px;padding:6px;min-height:44px}#managementContent .armor-card>.armor-art{position:absolute;right:10px;top:10px;width:26px;height:26px;opacity:.4}#managementContent .armor-card>p:not(.stat){display:none}.gear-heading .armor-art,.forge-art{width:28px;height:32px;flex-basis:28px}.gear-stars{font-size:12px;line-height:16px}.gear-stars strong{font-size:10px}.gear-heading h3{font-size:14px!important}.gear-preview{font-size:11px!important}}
+@media(max-height:480px){#managementContent #shop>.weapon-card{gap:4px}#managementContent .weapon-card .weapon-art{height:46px;width:42px}#managementContent .weapon-card>p{margin-top:0!important;line-height:1.3}}
+/* Armor portraits use the same isolated item treatment as weapon artwork. */
+#managementContent .armor-art{width:70px;height:84px;flex:0 0 70px;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 70%,#bfaa6b26,transparent 68%);border-bottom:1px solid #ac98623d}
+.armor-art img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 2px 3px #0006)}
+#managementContent .armor-card .item-top>div{min-width:0}#managementContent .armor-card .item-top h3{margin-bottom:7px}.armor-card .item-top .stat{font-size:12px;line-height:1.4}
+#managementContent .forge-card .gear-heading>.armor-art{width:46px;height:54px;flex-basis:46px}
+#managementContent #shop>.gear-awakened .armor-art img{filter:drop-shadow(0 0 5px #bb91dc77)}
+@media(max-height:620px){#managementContent .armor-art{width:52px;height:60px;flex-basis:52px}#managementContent .forge-card .gear-heading>.armor-art{width:34px;height:40px;flex-basis:34px}}
+@media(max-height:480px){#managementContent .armor-card .armor-art{width:42px;height:48px;flex-basis:42px}#managementContent .armor-card .item-top h3{font-size:14px;margin-bottom:4px}#managementContent .armor-card .item-top .stat{font-size:11px}}

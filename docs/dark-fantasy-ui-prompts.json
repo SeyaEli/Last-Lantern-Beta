@@ -1,0 +1,14 @@
+{
+  "tool": "Built-in image_gen",
+  "transparent_background": true,
+  "assets": [
+    {
+      "file": "public/assets/ui/menu-banner.png",
+      "prompt": "One wide horizontal dark fantasy RPG menu button frame, aspect ratio about 5:1. Full outer shape visible with generous transparent margin. Blackened hammered iron plaque with distressed charcoal slate interior. Ornate thin weathered silver-bronze double rim, sharpened pointed tips at left and right, medieval gothic angular filigree at corners, delicate thorn-like metalwork. An empty circular metal medallion on the LEFT connected to the frame, slightly wider than the plaque's height. The medallion center must be empty dark metal, no symbol. Broad CENTER and RIGHT text area must remain blank, quiet very dark charcoal; fine grained stone/leather material. Small restrained antique gold edge glints. Hand-painted realistic dark fantasy inventory UI like a premium gothic action RPG. NO TEXT, LETTERS, RUNES, ICONS, CHARACTERS, ITEMS, LOGOS, SCENERY OR BACKGROUND. True alpha transparency outside the frame. Crisp high detail, graphic asset only, NOT a UI screenshot. This is a reusable backdrop; all live labels and icons will be added in code."
+    },
+    {
+      "file": "public/assets/ui/card-frame.png",
+      "prompt": "One portrait rectangular dark fantasy RPG inventory card FRAME only, aspect ratio about 3:4. Entire border visible with transparent margins. Very thin weathered bronze and dark silver double rim. Four ornate gothic pointed corner embellishments, subtle symmetrical angular thorn-like medieval metalwork, small restrained antique gold edge glints, blackened battered metal, dark fantasy premium action RPG UI. Crucial: the large central rectangle must be completely transparent alpha so code can place live item artwork and text beneath it; only a narrow perimeter frame is painted. No inner panel or image, no background, no cast shadow covering the center. NO TEXT, LETTERS, RUNES, ICONS, LOGOS, CHARACTERS OR ITEMS. Not a screenshot. A production-ready decorative transparent border asset, shaded hand-painted metal, crisp and highly legible at small game UI sizes."
+    }
+  ]
+}

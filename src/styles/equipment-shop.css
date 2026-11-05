@@ -1,0 +1,23 @@
+.store-tabs{display:flex;gap:7px;flex:0 0 auto;margin:0 0 10px}
+.toast{pointer-events:none}
+.store-tabs button{min-height:36px;padding:6px 16px;font-size:13px}
+.store-tabs button[aria-current=page]{color:var(--gold)!important;border-color:var(--gold)!important}
+.forge-chance{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px}.forge-chance strong{color:var(--gold)}.forge-chance span{color:var(--muted);font-size:11px}
+.recipe-summary{font-size:12px!important;line-height:1.45;color:var(--muted);border-left:2px solid var(--fantasy-edge);padding-left:8px}
+.forge-odds{display:flex;align-items:center;gap:12px;margin-bottom:14px}.forge-odds strong{font:32px Georgia,serif;color:var(--gold)}.forge-odds span{font-size:13px;color:var(--muted)}
+.forge-recipe{list-style:none;padding:0;margin:10px 0 16px;display:grid;gap:5px}.forge-recipe li{display:flex;justify-content:space-between;gap:20px;padding:6px 10px;background:#070a093b;border-bottom:1px solid #82735b45;font-size:13px}.recipe-missing{color:#f3a99d!important}
+.forge-support{display:grid;gap:9px;margin:14px 0}.forge-support label{display:flex;align-items:center;gap:8px;min-height:34px;font-size:13px;color:var(--text)}.forge-support input{accent-color:var(--gold);width:17px;height:17px;flex:0 0 17px}
+.supply-heading{display:flex;justify-content:space-between;align-items:center;gap:8px}.supply-art{width:60px;height:60px;display:grid;place-items:center;color:var(--gold);background:radial-gradient(circle,#e3bd781a,transparent 70%)}.supply-art svg{width:48px;height:48px}.supply-card h3{font-size:18px!important;color:var(--text)}
+.supply-buffs{position:absolute;bottom:71px;right:14px;font-size:11px;color:#ffd777;background:#101715de;padding:4px 8px;pointer-events:none}
+.battle-pack{display:grid;gap:7px}.battle-pack section{display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid var(--fantasy-edge);background:#070a093b}.battle-pack section>div{flex:1}.battle-pack p{margin:4px 0 0}.battle-pack button{flex:0 0 auto}.battle-pack strong{font-size:14px}
+.material-counts{list-style:none;margin:0;padding:0;display:grid;gap:3px;font-size:12px}.material-counts li{display:flex;justify-content:space-between;gap:10px}.material-counts strong{color:var(--gold)}.material-pouch>p{font-size:11px!important;line-height:1.35}
+.supply-card .supply-art{width:80px;height:80px;flex:0 0 80px;background:radial-gradient(ellipse at 50% 65%,#e3bd781f,transparent 70%)}
+.supply-art img{width:100%;height:100%;display:block;object-fit:contain;filter:drop-shadow(0 3px 3px #0008);transition:transform .18s ease,filter .18s ease}
+.pack-item-art{width:46px;height:54px;object-fit:contain;flex:0 0 46px;filter:drop-shadow(0 2px 2px #0008)}.forge-support-art{width:30px;height:34px;object-fit:contain;flex:0 0 30px}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){.supply-card:hover .supply-art img{transform:translateY(-2px) scale(1.04);filter:drop-shadow(0 3px 4px #000a)}}
+@media(max-height:700px){.store-tabs{margin-bottom:5px;gap:5px}.store-tabs button{min-height:32px;padding:4px 10px}#managementContent .forge-card{gap:6px!important}.forge-card .gear-preview{font-size:11px!important}.recipe-summary{font-size:11px!important}.supply-art{width:44px;height:44px}.supply-art svg{width:38px;height:38px}}
+@media(max-height:700px){.supply-card .supply-art{width:60px;height:60px;flex-basis:60px}}
+@media(max-height:480px){.store-tabs button{min-height:28px;font-size:11px}.store-tabs{margin-bottom:4px}.forge-card .gear-heading .armor-art,.forge-card .forge-art{height:28px!important;width:28px!important;flex-basis:28px!important}.forge-card .gear-preview{display:none}.recipe-summary{font-size:10px!important;line-height:1.2}.forge-chance{font-size:11px}.supply-heading .badge{font-size:9px}.supply-art{height:30px;width:30px}.supply-art svg{width:28px;height:28px}}
+@media(max-height:480px){#managementScreen{position:relative}#managementScreen:has(#storeNavigation:not(.hidden)) .screen-heading h2{display:none}#managementScreen:has(#storeNavigation:not(.hidden)) #storeNavigation{position:absolute;top:5px;left:10px;right:112px;margin:0;z-index:3}#storeNavigation button{flex:0 1 auto;min-width:0;padding:5px 10px}}
+@media(max-height:480px){.supply-card .supply-art{width:38px;height:38px;flex-basis:38px}}
+@media(max-width:700px){.store-tabs{gap:4px}.store-tabs button{flex:1;padding:5px;font-size:11px;min-height:36px}.supply-buffs{bottom:55px;right:6px;max-width:65%;font-size:10px}.battle-pack section{gap:7px;padding:8px}.battle-pack strong{font-size:13px}.battle-pack p{font-size:12px}}

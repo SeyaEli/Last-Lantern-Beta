@@ -1,9 +1,20 @@
+import {actionTiming,attackBodyMotion,locomotionFrame,combatMotion,motionEvent,actorImpact,actorRelease,inheritActorMotion,sampleActorMotion,stepCombatMotion,drawMotionGround,drawMotionForeground} from '../systems/combat-motion.mjs';
+import {SUPPLY_ART_FILES,MATERIALS,CONSUMABLES,SUPPLY_SHOP,buySupply,grantInventory,materialRewards,validSupplyRun,consumeSupply,tickSupplies} from '../systems/supplies.mjs';
+import {ARMORS,emptyEnhancement,validEnhancement,gearItem,gearOwned,gearEnhancement,nextEnhancement,enhancementCost,enhancementRecipe,enhancementChance,gearStats,normalizeGearSave,validGearSave,enhanceGear,buyArmor} from '../systems/equipment.mjs';
+import {WARDEN_CONFIG,isWarden,wardenCasting,createWardenState,validWardenState,interruptWarden,tickWarden,chooseWardenZone} from '../systems/void-warden.mjs';
+import {drawWarden} from '../systems/void-warden-renderer.mjs';
+import {MIMIC_CONFIG,isMimic,isMimicDecoy,createMimicState,validMimicState,interruptMimic,tickMimic,chooseMimicCopies} from '../systems/spectral-mimic.mjs';
+import {drawMimic} from '../systems/spectral-mimic-renderer.mjs';
 import {EATER_CONFIG,createEaterState,validEaterState,eaterCasting,interruptEater,tickLanternEater} from '../systems/lantern-eater.mjs';
 import {drawLanternEater} from '../systems/lantern-eater-renderer.mjs';
+import {BRUTE_CONFIG,isBrute,createBruteState,validBruteState,interruptBrute,tickBrute} from '../systems/brute.mjs';
+import {drawBrute} from '../systems/brute-renderer.mjs';
 import {RUNNER_CONFIG,isRunner,createRunnerState,validRunnerState,interruptRunner,tickRunner} from '../systems/runner.mjs';
 import {drawRunner} from '../systems/runner-renderer.mjs';
 import {STALKER_CONFIG,isShadowStalker,stalkerAttacking,createStalkerState,validStalkerState,interruptStalker,tickShadowStalker} from '../systems/shadow-stalker.mjs';
 import {drawShadowStalker} from '../systems/shadow-stalker-renderer.mjs';
+import {ARCHER_CONFIG,isCoverArcher,createArcherState,validArcherState,chooseArcherCover,interruptArcher,tickCoverArcher} from '../systems/cover-archer.mjs';
+import {drawCoverArcher} from '../systems/cover-archer-renderer.mjs';
 import {DIRECTOR_CONFIG,createDirector,validDirector,directorRandom,directorPhase,threatBudget,planDirectorWave,chooseDirectorSpawn} from '../systems/spawn-director.mjs';
 import {COMBAT_CONFIG,beginCombatFrame,finishCombatMovement,endCombatFrame,resolvePlayerDamage,projectilePlayerContact,rushPlayerContact,sweepCircle} from '../systems/combat.mjs';
 import {LANTERN_CONFIG,createLanternState,validLanternState,cycleLanternMode,lanternMessage,lanternStatus,shadowSpeedMultiplier,tickLantern,resetLanternMap,dropLanternPickup} from '../systems/lantern.mjs';
@@ -309,7 +320,7 @@ function weaponLocked(w){return w.tier===4?(save.wins<3):w.tier===3?(save.wins<1
 function weaponGateLabel(w){return ['Ready to forge','Clear chapter 1','Clear chapter 2','Defeat final boss','Defeat final boss 3 times'][w.tier||0]}
 
 
-const fresh=()=>({v:2,gold:0,hero:'brann',unlocked:['brann'],weapon:'crook',unlockedWeapons:['iron','crook'],up:{weapon:0,haste:0,heart:0,power:0,agility:0,camp:0,armor:0,recovery:0,salvage:0,focus:0},best:0,wins:0,runs:0,lastClaim:Date.now(),lastRun:null,sound:false,edition:3,skills:{},skillRanks:{},journal:[],records:{campaign:0,story:0,endless:0,survival:0},storyComplete:false,expedition:null,checkpoint:null});
+const fresh=()=>normalizeGearSave({v:2,gold:0,hero:'brann',unlocked:['brann'],weapon:'crook',unlockedWeapons:['iron','crook'],up:{weapon:0,haste:0,heart:0,power:0,agility:0,camp:0,armor:0,recovery:0,salvage:0,focus:0},best:0,wins:0,runs:0,lastClaim:Date.now(),lastRun:null,sound:false,edition:3,skills:{},skillRanks:{},journal:[],records:{campaign:0,story:0,endless:0,survival:0},storyComplete:false,expedition:null,checkpoint:null});
 
 function migrate(raw){
   try{
@@ -327,6 +338,7 @@ function normalizeProgress(d){
  if(!d||typeof d!=='object')return d;
  if(d.v!==2)return d;
  d.edition=3;
+ normalizeGearSave(d);
  d.chapterUnlocked=Math.max(1,Math.min(6,Math.floor(Number(d.chapterUnlocked)||1)));
  if(d.up&&typeof d.up==='object')for(const k of ['armor','recovery','salvage','focus'])if(d.up[k]===undefined)d.up[k]=0;
  d.skills=d.skills&&typeof d.skills==='object'&&!Array.isArray(d.skills)?d.skills:{};
@@ -341,6 +353,8 @@ function normalizeProgress(d){
 function validExpedition(s){
  if(!s||s.version!==1||!['campaign','story','endless','survival'].includes(s.mode)||!s.state||!heroes.some(h=>h.id===s.heroId)||!weapons.some(w=>w.id===s.weaponId))return false;
  const r=s.state;
+ if(!validSupplyRun(r))return false;
+ if(r.gearSnapshot!==undefined){const g=r.gearSnapshot;if(!g||g.weaponId!==s.weaponId||!ARMORS.some(a=>a.id===g.armorId)||!validEnhancement(g.weaponUpgrade)||!validEnhancement(g.armorUpgrade))return false;}
  if(r.lantern!==undefined&&!validLanternState(r.lantern))return false;
  if(r.director!==undefined&&!validDirector(r.director))return false;
  if(!Number.isInteger(r.chapter)||r.chapter<1||r.chapter>6||!Number.isInteger(r.wave)||r.wave<1||r.wave>100)return false;
@@ -348,8 +362,25 @@ function validExpedition(s){
  if(r.maxHp<=0||r.xpNeed<=0||r.level<1||r.rate<=0)return false;
  for(const k of ['enemies','shots','drops','chests','particles','texts','effects','burnZones','hazards','ghosts','corpses','shrines','caches'])if(!Array.isArray(r[k])||r[k].length>1000)return false;
  for(const e of r.enemies)if(e?.archetype===EATER_CONFIG.archetype){if(e.boss||e.type!==3||!validEaterState(e.eater))return false}else if(e?.eater!==undefined)return false;
+ const wardens=r.enemies.filter(e=>isWarden(e)&&e.hp>0);
+ if(wardens.length>WARDEN_CONFIG.maxAlive||new Set(wardens.map(e=>e.warden?.id)).size!==wardens.length||wardens.filter(wardenCasting).length>WARDEN_CONFIG.maxCasting)return false;
+ for(const e of r.enemies)if(isWarden(e)){if(e.boss||e.elite||e.type!==2||!validWardenState(e.warden))return false}else if(e?.warden!==undefined)return false;
+ const seals=r.hazards.filter(h=>h.wardenOwner!==undefined);
+ if(seals.length>WARDEN_CONFIG.maxZones)return false;
+ for(const h of seals)if(!wardens.some(e=>e.warden.id===h.wardenOwner)||!Number.isFinite(h.x)||h.x<0||h.x>MW||!Number.isFinite(h.y)||h.y<0||h.y>MH||h.radius!==WARDEN_CONFIG.radius||!Number.isFinite(h.dmg)||h.dmg<0||h.dmg>1e9||!Number.isFinite(h.t)||h.t<=0||h.t>.45||h.delay!==.4||typeof h.struck!=='boolean')return false;
+ const mimics=r.enemies.filter(e=>isMimic(e)&&e.hp>0),decoys=r.enemies.filter(e=>isMimicDecoy(e)&&e.hp>0);
+ if(mimics.length>MIMIC_CONFIG.maxAlive||new Set(mimics.map(e=>e.mimic?.id)).size!==mimics.length)return false;
+ for(const e of r.enemies){
+  if(isMimic(e)){if(e.boss||e.elite||e.type!==3||!validMimicState(e.mimic))return false}else if(e?.mimic!==undefined)return false;
+  if(isMimicDecoy(e)){const owner=mimics.find(q=>q.mimic.id===e.mimicOwner);if(e.boss||e.elite||e.type!==3||e.dmg!==0||e.hp!==1||e.maxHp!==1||!owner||owner.chapter!==e.chapter||!['illusion','aim','recover'].includes(owner.mimic.state)||!Number.isFinite(e.decoyLeft)||e.decoyLeft<=0||e.decoyLeft>MIMIC_CONFIG.decoyLife)return false}
+  else if(e?.mimicOwner!==undefined||e?.decoyLeft!==undefined)return false;
+ }
+ if(mimics.some(e=>decoys.filter(q=>q.mimicOwner===e.mimic.id).length>MIMIC_CONFIG.maxDecoys))return false;
+ for(const e of r.enemies)if(e?.brute!==undefined&&(!isBrute(e)||!validBruteState(e.brute)))return false;
  for(const e of r.enemies)if(e?.runner!==undefined&&(!isRunner(e)||!validRunnerState(e.runner)))return false;
+ for(const e of r.enemies)if(e?.archer!==undefined&&(!isCoverArcher(e)||!validArcherState(e.archer)))return false;
  for(const e of r.enemies)if(isShadowStalker(e)){if(e.boss||e.elite||e.chapter!==STALKER_CONFIG.chapter||e.type!==STALKER_CONFIG.type||!validStalkerState(e.stalker))return false}else if(e?.stalker!==undefined)return false;
+ if(r.enemies.filter(e=>isShadowStalker(e)&&e.hp>0).length>STALKER_CONFIG.maxAlive||r.enemies.filter(stalkerAttacking).length>STALKER_CONFIG.maxAttacking)return false;
  if(!r.anim||!Number.isFinite(r.waveTime)||r.waveTime<0||!Number.isFinite(r.cycle)||r.cycle<0)return false;
  const finite=(v,depth=0)=>{if(depth>16)return false;if(typeof v==='number')return Number.isFinite(v)&&Math.abs(v)<1e15;if(Array.isArray(v))return v.length<=1000&&v.every(x=>finite(x,depth+1));if(v&&typeof v==='object')return Object.keys(v).length<100&&Object.values(v).every(x=>finite(x,depth+1));return v===null||['string','boolean','undefined'].includes(typeof v)};
  return finite(s);
@@ -358,7 +389,7 @@ function validExpedition(s){
 function validate(x){
   if(!x||x.v!==2||!Number.isInteger(x.gold)||x.gold<0||!Array.isArray(x.unlocked)||!x.unlocked.includes('brann')||!heroes.some(h=>h.id===x.hero))return false;
   if(!Array.isArray(x.unlockedWeapons)||!x.unlockedWeapons.includes('iron')||!weapons.some(w=>w.id===x.weapon))return false;
-  if(!x.up)return false;
+  if(!x.up||!validGearSave(normalizeGearSave(x),weapons))return false;
   for(const k of Object.keys(fresh().up)){if(!Number.isInteger(x.up[k])||x.up[k]<0||x.up[k]>200)return false}
   return ['best','wins','runs'].every(k=>Number.isInteger(x[k])&&x[k]>=0)&&Number.isFinite(x.lastClaim);
 }
@@ -465,7 +496,7 @@ function renderShop(){
           <div class="weapon-art"><img src="${spriteData[w.id]}" alt="${w.name}" width="94" height="112"></div>
           <div><h3>${w.name} <span class="badge ${badgeClass}">${w.rarity==='leg'?'Legendary':w.rarity}</span> ${equipped?'<span class="badge badge-active">Equipped</span>':''}</h3><p>${w.stat}</p></div>
         </div>
-        <p>${w.desc}</p><p style="margin-top:6px;color:var(--gold)">${w.cost?num(w.cost)+' gold · '+weaponGateLabel(w):'Starter weapon'}</p>
+        ${gearStars(gearEnhancement(save,'weapon',w.id))}<p>${w.desc}</p><p style="margin-top:6px;color:var(--gold)">${w.cost?num(w.cost)+' gold · '+weaponGateLabel(w):'Starter weapon'}</p>
         <div class="item-bottom" style="margin-top:10px">
           <span class="stat">${w.special?w.special.toUpperCase():'Passive'}</span>
           <button data-weap-btn="${w.id}" ${locked||equipped||(!owned&&(save.gold<w.cost||weaponLocked(w)))?'disabled':''}>
@@ -670,7 +701,8 @@ function startRun(){
   ensureClassWeapon();
   let hero=heroes.find(h=>h.id===save.hero);
   let wep=weapons.find(w=>w.id===save.weapon);
-  let max=hero.hp+save.up.heart*15;
+  const armorItem=ARMORS.find(a=>a.id===save.armor),armorUpgrade=gearEnhancement(save,'armor',save.armor),weaponUpgrade=gearEnhancement(save,'weapon',wep.id),armorStats=gearStats('armor',armorItem,armorUpgrade);
+  let max=hero.hp+save.up.heart*15+armorStats.hp;
 
   run={
     hero,weapon:wep,mode:chosenMode,director:createDirector(selectedSeed||generateDirectorSeed(),selectedDirectorDifficulty),chapter:selectedChapter,wave:1,waveTime:0,hazards:[],slow:0,chapterDone:false,
@@ -678,7 +710,8 @@ function startRun(){
     time:0,level:1,xp:0,xpNeed:8,gold:0,kills:0,lantern:createLanternState(),
     enemies:[],shots:[],drops:[],chests:[],particles:[],texts:[],effects:[],burnZones:[],
     spawn:0,attack:0,skillCd:0,dashCd:0,dashTime:0,invuln:0,paused:false,
-    dmg:(hero.dmg+wep.dmg)+save.up.weapon*5,
+    dmg:(hero.dmg+wep.dmg)+save.up.weapon*5+gearStats('weapon',wep,weaponUpgrade).damageBonus,
+    gearSnapshot:{weaponId:wep.id,armorId:armorItem.id,weaponUpgrade,armorUpgrade},
     rate:Math.max(.08,Math.max(.16,hero.rate-wep.rateBonus)*Math.max(.4,1-save.up.haste*.003)),
     speed:hero.speed*(1+.6*(1-Math.exp(-save.up.agility/80))),
     critChance:.15,damageReduce:0,pierce:wep.pierce,multi:wep.multi,
@@ -709,7 +742,7 @@ function banner(text){
 
 function pauseGame(){
   if(!run)return;
-  if(run.paused){if(modalKind==='pause'){closeModal();run.paused=false}return}
+  if(run.paused){if(modalKind==='pause'||modalKind==='supplies'){closeModal();run.paused=false}return}
   run.paused=true;keys.clear();pointer=null;
   showModal('Expedition Paused',`<p>Take a breath. The woods are frozen.</p><p class="small muted">Retreating secures all gold currently earned this run.</p>`,[
     {label:'Resume',primary:true,fn:()=>{closeModal();if(run)run.paused=false}},
@@ -721,7 +754,7 @@ $('#pause').onclick=pauseGame;
 $('#modal').addEventListener('cancel',e=>{
   e.preventDefault();
   if(['level','chapter','story','boss-break','ending','prepare','new-run','defeat','npc-dialog','story-map','story-log'].includes(modalKind))return;
-  if(modalKind==='pause'||modalKind==='help'){closeModal();if(run)run.paused=false}
+  if(modalKind==='pause'||modalKind==='help'||modalKind==='supplies'){closeModal();if(run)run.paused=false}
   else closeModal();
 });
 
@@ -810,7 +843,7 @@ function skill(){
       if(Math.hypot(e.x-r.x,e.y-r.y)<185){
         hit(e,110*factor,true);
         let a=Math.atan2(e.y-r.y,e.x-r.x);
-        e.x+=Math.cos(a)*55;e.y+=Math.sin(a)*55;
+        displaceEnemy(run,e,Math.cos(a)*55,Math.sin(a)*55);
       }
     });
   }else if(r.hero.id==='nyx'){
@@ -1035,51 +1068,31 @@ function update(dt){
   r.burnZones=r.burnZones.filter(b=>b.t>0);
 
   // Update enemies
+  const archerPlanning={left:ARCHER_CONFIG.plansPerFrame};
   for(const e of r.enemies){
     if(e.hp<=0)continue;
+    constrainEnemyPosition(r,e);
     if(e.spawnGrace>0){e.spawnGrace=Math.max(0,e.spawnGrace-dt);continue}
     e.flash=Math.max(0,e.flash-dt);
     e.phase+=dt;
 
+    if(isMimicDecoy(e)){const owner=r.enemies.find(q=>isMimic(q)&&q.hp>0&&q.mimic.id===e.mimicOwner);e.decoyLeft-=dt;if(!owner||e.decoyLeft<=0)e.hp=0;continue}
+    if(isWarden(e)){updateWarden(r,e,dt);continue}
+    if(isMimic(e)){updateMimic(r,e,dt);continue}
     const storyEnemyFrom={x:e.x,y:e.y};
     let dis=Math.hypot(r.x-e.x,r.y-e.y);
     let a=Math.atan2(r.y-e.y,r.x-e.x);
+    // Cover goals and stationary attack states do not need the shared pursuit query.
+    if(isCoverArcher(e)){updateCoverArcher(r,e,dt,a,archerPlanning);continue}
     a=storySteeringAngle(e,r,a);
 
     if(e.archetype===EATER_CONFIG.archetype){updateLanternEater(r,e,dt,a);storyMoveEnemy(r,e,storyEnemyFrom);continue}
+    if(isBrute(e)){updateBrute(r,e,dt,a);continue}
     if(isRunner(e)){updateRunner(r,e,dt,a);continue}
     if(isShadowStalker(e)){updateShadowStalker(r,e,dt,a);continue}
     // AI behavior by mob type
     if(e.boss){
       bossAI(e,r,dt,a,dis);
-    }else if(e.type===2){
-      // Archer stays back
-      if(dis>130){
-        e.x+=Math.cos(a)*e.speed*dt;
-        e.y+=Math.sin(a)*e.speed*dt;
-      }else if(dis<80){
-        e.x-=Math.cos(a)*e.speed*dt*.8;
-        e.y-=Math.sin(a)*e.speed*dt*.8;
-      }
-      e.shoot-=dt;
-      if(e.shoot<=0&&dis<260){
-        e.shoot=2.6;queueEnemyCast(e,[{angle:a,speed:170,dmg:e.dmg,color:chapters[e.chapter-1].accent}]);
-      }
-    }else if(e.type===4){
-      // Brute charging mechanic
-      e.chargeCd=Math.max(0,e.chargeCd-dt);
-      if(e.charging>0){
-        if(e.chargeWindup>0){e.chargeWindup-=dt}else{e.charging-=dt;e.x+=Math.cos(e.chargeAngle)*e.speed*3.4*dt;e.y+=Math.sin(e.chargeAngle)*e.speed*3.4*dt}
-      }else{
-        e.x+=Math.cos(a)*e.speed*dt;
-        e.y+=Math.sin(a)*e.speed*dt;
-        if(dis<180&&e.chargeCd<=0){
-          e.chargeWindup=.45;e.charging=.42;
-          e.chargeCd=3.8;
-          e.chargeAngle=a;
-          shake=Math.max(shake,3);
-        }
-      }
     }else if(e.type===3){
       // Specter floats and wobbles
       let sway=Math.sin(e.phase*4)*.5;
@@ -1094,7 +1107,7 @@ function update(dt){
 
     tickEnemyCast(e,r,dt);
     enemyTrait(e,r,dt,a,dis);
-    storyMoveEnemy(r,e,storyEnemyFrom);dis=Math.hypot(r.x-e.x,r.y-e.y);
+    storyMoveEnemy(r,e,storyEnemyFrom);constrainEnemyPosition(r,e);dis=Math.hypot(r.x-e.x,r.y-e.y);
     // Player melee contact collision
     e.attack=Math.max(0,e.attack-dt);
     if(dis<e.size+COMBAT_CONFIG.playerContactPadding&&e.attack<=0&&enemyContactReady(e,dt)&&
@@ -1513,6 +1526,7 @@ function draw(t){
 
   drawLanternWorld(ctx,r,camera(r),W,H);
   drawCombatPickups(ctx,r);
+  drawMotionGround(ctx,r,{reduced:reducedMotion,skillColor:combatPalette[combatSkillRecipes[r.activeSkill]?.theme]||r.hero.color});
 
   drawDashTrails(ctx,r);
 
@@ -1522,13 +1536,16 @@ function draw(t){
     ...r.corpses.map(e=>({y:e.y,draw:()=>drawEnemy(ctx,e,t)})),
     ...r.enemies.map(e=>({y:e.y,draw:()=>drawEnemy(ctx,e,t)})),
     {y:r.y,draw:()=>{
-      if(r.invuln>0&&r.dashTime<=0&&!reducedMotion&&Math.floor(t*12)%2===0)return;
       if(r.shield>0){
         ctx.strokeStyle='#c1acef';ctx.lineWidth=2;
         ctx.fillStyle='#c1acef33';
         ctx.beginPath();ctx.arc(r.x,r.y-2,24,0,Math.PI*2);ctx.fill();ctx.stroke();
       }
+      ctx.save();
+      // Protected heroes stay visible; a soft pulse replaces alternate blank frames.
+      if(r.invuln>0&&r.dashTime<=0&&!reducedMotion)ctx.globalAlpha*=.78+Math.sin(t*16)*.12;
       drawHero(ctx,r.x,r.y,r.hero,(keys.size||pointer)?r.time:0,1);
+      ctx.restore();
     }}
   ].sort((a,b)=>a.y-b.y);
 
@@ -1538,6 +1555,7 @@ function draw(t){
   drawHeroAction(ctx,r);
 
   drawCombatProjectiles(ctx,r);
+  drawMotionForeground(ctx,r,{reduced:reducedMotion});
 
   // Special skill rings
   for(const e of r.effects){
@@ -1794,7 +1812,7 @@ function classAttack(r){
   if(!targets.length)return;const target=targets[0],distance=Math.hypot(target.x-r.x,target.y-r.y);if(distance>r.hero.range)return;
   r.aim=Math.atan2(target.y-(r.y-28),target.x-r.x);r.heading=Math.cos(r.aim)<0?-1:1;
   const melee=['keeper','brawler'].includes(r.hero.classId);
-  if(melee){for(const e of targets)if(Math.hypot(e.x-r.x,e.y-r.y)<r.hero.range+e.size){hit(e,r.dmg*(1+r.multi*.15));const a=Math.atan2(e.y-r.y,e.x-r.x);e.x+=Math.cos(a)*16;e.y+=Math.sin(a)*16}}
+  if(melee){for(const e of targets)if(Math.hypot(e.x-r.x,e.y-r.y)<r.hero.range+e.size){hit(e,r.dmg*(1+r.multi*.15));const a=Math.atan2(e.y-r.y,e.x-r.x);displaceEnemy(run,e,Math.cos(a)*16,Math.sin(a)*16)}}
   else for(let i=0;i<=r.multi;i++)shoot(r.x+Math.cos(r.aim)*18,r.y-28+Math.sin(r.aim)*18,r.aim+(i-r.multi/2)*.12,r.dmg,r.hero.classId==='gunner'?580:340,r.pierce);
   r.attack=r.rate;r.anim.attackLeft=.23;sound(r.hero.classId==='gunner'?110:420,.025,'triangle',.015);
 }
@@ -1807,8 +1825,8 @@ skill=function(){
   r.skillCd=r.hero.cd;r.anim.skillLeft=.72;
   if(k==='mage'||k==='brawler'){
     const radius=k==='mage'?240:170;r.effects.push({x:r.x,y:r.y,t:.7,max:.7,r:radius,color:r.hero.color});
-    for(const e of r.enemies)if(Math.hypot(e.x-r.x,e.y-r.y)<radius){hit(e,(k==='mage'?160:120)*f,true);e.stun=1.4;const a=Math.atan2(e.y-r.y,e.x-r.x);e.x+=Math.cos(a)*65;e.y+=Math.sin(a)*65;if(k==='mage')r.burnZones.push({x:e.x,y:e.y,r:38,t:3,tick:0,dmg:r.dmg*.25})}
-  }else if(k==='healer'){r.hp=Math.min(r.maxHp,r.hp+55*f*(1+(r.skillRank||0)*.01));r.shield=4;r.effects.push({x:r.x,y:r.y,t:.8,max:.8,r:150,color:r.hero.color});for(const e of r.enemies)if(Math.hypot(e.x-r.x,e.y-r.y)<150){const a=Math.atan2(e.y-r.y,e.x-r.x);e.x+=Math.cos(a)*90;e.y+=Math.sin(a)*90}textPop(r.x,r.y-25,'Sanctuary +'+Math.round(55*f),'#fff0cd')}
+    for(const e of r.enemies)if(Math.hypot(e.x-r.x,e.y-r.y)<radius){hit(e,(k==='mage'?160:120)*f,true);e.stun=1.4;const a=Math.atan2(e.y-r.y,e.x-r.x);displaceEnemy(run,e,Math.cos(a)*65,Math.sin(a)*65);if(k==='mage')r.burnZones.push({x:e.x,y:e.y,r:38,t:3,tick:0,dmg:r.dmg*.25})}
+  }else if(k==='healer'){r.hp=Math.min(r.maxHp,r.hp+55*f*(1+(r.skillRank||0)*.01));r.shield=4;r.effects.push({x:r.x,y:r.y,t:.8,max:.8,r:150,color:r.hero.color});for(const e of r.enemies)if(Math.hypot(e.x-r.x,e.y-r.y)<150){const a=Math.atan2(e.y-r.y,e.x-r.x);displaceEnemy(run,e,Math.cos(a)*90,Math.sin(a)*90)}textPop(r.x,r.y-25,'Sanctuary +'+Math.round(55*f),'#fff0cd')}
   else{for(let i=-6;i<=6;i++)shoot(r.x,r.y-28,r.aim+i*.07,55*f,580,true);r.effects.push({x:r.x,y:r.y,t:.4,max:.4,r:80,color:r.hero.color})}
   sound(290,.18,'triangle');updateHud();
 };
@@ -2103,7 +2121,7 @@ releaseClassAttack=function(r){
   const targets=r.enemies.filter(e=>e.hp>0&&(r.mode!=='story'||!r.story||storyLineOfSight(r,r.x,r.y,e.x,e.y,3))).sort((a,b)=>Math.hypot(a.x-r.x,a.y-r.y)-Math.hypot(b.x-r.x,b.y-r.y));if(!targets.length)return;const target=targets[0];if(Math.hypot(target.x-r.x,target.y-r.y)>r.hero.range)return;
   r.heading=r.attackFacing||r.heading;
   for(let i=0;i<2;i++){const origin=firingPoint(r);r.aim=Math.atan2(target.y-origin.y,target.x-origin.x)}const origin=firingPoint(r),melee=['keeper','brawler'].includes(r.hero.classId);
-  if(melee){for(const e of targets)if(Math.hypot(e.x-r.x,e.y-r.y)<r.hero.range+e.size){hit(e,r.dmg*(1+r.multi*.15));const a=Math.atan2(e.y-r.y,e.x-r.x);e.x+=Math.cos(a)*16;e.y+=Math.sin(a)*16}}
+  if(melee){for(const e of targets)if(Math.hypot(e.x-r.x,e.y-r.y)<r.hero.range+e.size){hit(e,r.dmg*(1+r.multi*.15));const a=Math.atan2(e.y-r.y,e.x-r.x);displaceEnemy(run,e,Math.cos(a)*16,Math.sin(a)*16)}}
   else for(let i=0;i<=r.multi;i++)shoot(origin.x,origin.y,r.aim+(i-r.multi/2)*.10,r.dmg,r.hero.classId==='gunner'?580:340,r.pierce);
   r.muzzle={...origin,angle:r.aim,life:.10,color:r.weapon.color};r.attack=r.rate;sound(r.hero.classId==='gunner'?100:440,.025,'triangle',.014);
 };
@@ -2184,7 +2202,7 @@ function difficultyEnemyType(r){
  return pool[Math.floor(directorRandom(ensureDirector(r),'composition')*pool.length)];
 }
 function promoteWaveElite(e,r){
- if(!e||e.boss||e.elite)return;e.elite=true;e.name='Elite '+chapters[r.chapter-1].family[e.type];
+ if(!e||e.boss||e.elite||e.archetype)return;e.elite=true;e.name='Elite '+chapters[r.chapter-1].family[e.type];
  e.hp*=2.6;e.maxHp=e.hp;e.dmg*=1.35;e.speed*=1.1;e.size=23;
 }
 
@@ -2227,7 +2245,7 @@ function drawEnemyMotion(c,e,t){
  const id=enemyArtId(e);if(!spriteImages[id]?.loaded)return false;if(!animationSheets[id])makeAnimationSheet(id);
  let state='walk',p=loopPhase((e.phase||0)+(e.x%17)*.03,e.type===1?15:e.type===4?8:11,12);
  if(e.eater&&eaterCasting(e)){state='skill';p=e.eater.state==='windup'?1-e.eater.left/EATER_CONFIG.windup:1-e.eater.left/EATER_CONFIG.channel}
- if(e.dead){state='death';p=Math.min(.99,e.deathAge/e.deathDuration)}else if(e.flash>0){state='hurt';p=Math.min(.99,1-e.flash/.12)}else if(e.stalker&&['windup','strike','recover','stunned'].includes(e.stalker.state)){const s=e.stalker;state=s.state==='windup'?'skill':s.state==='strike'?'dash':s.state==='stunned'?'hurt':'idle';p=s.state==='windup'?1-s.left/STALKER_CONFIG.windup:s.state==='strike'?1-s.left/STALKER_CONFIG.strike:0}else if(e.runner&&e.runner.state!=='approach'){const s=e.runner;state=s.state==='windup'?'skill':s.state==='charge'?'dash':s.state==='stunned'?'hurt':'idle';p=s.state==='windup'?1-s.left/RUNNER_CONFIG.windup:s.state==='charge'?1-s.left/RUNNER_CONFIG.charge:0}else if(e.cast||e.contactWindup>0||e.chargeWindup>0){state='skill';p=e.cast?1-e.cast.left/e.cast.total:e.contactWindup>0?1-e.contactWindup/.3:1-e.chargeWindup/.45}else if(e.charging>0){state='dash';p=Math.min(.99,1-e.charging/.42)}else if(e.attackAnim>0){state='attack';p=Math.min(.99,1-e.attackAnim/.4)}
+ if(e.dead){state='death';p=Math.min(.99,e.deathAge/e.deathDuration)}else if(e.flash>0){state='hurt';p=Math.min(.99,1-e.flash/.12)}else if(e.warden&&e.warden.state!=='approach'){const s=e.warden;state=s.state==='windup'?'skill':s.state==='stunned'?'hurt':'idle';p=s.state==='windup'?1-s.left/WARDEN_CONFIG.windup:0}else if(e.mimic&&e.mimic.state!=='approach'){const s=e.mimic;state=s.state==='stunned'?'hurt':['split','aim'].includes(s.state)?'skill':'idle';p=s.state==='split'?1-s.left/MIMIC_CONFIG.split:s.state==='aim'?1-s.left/MIMIC_CONFIG.aim:0}else if(e.brute&&e.brute.state!=='approach'){const s=e.brute;state=s.state==='windup'?'skill':s.state==='charge'?'dash':s.state==='stunned'?'hurt':'idle';p=s.state==='windup'?1-s.left/BRUTE_CONFIG.windup:s.state==='charge'?1-s.left/BRUTE_CONFIG.charge:0}else if(e.archer&&['windup','release','recover','hide','stunned'].includes(e.archer.state)){const s=e.archer;state=s.state==='windup'?'skill':s.state==='release'?'attack':s.state==='stunned'?'hurt':'idle';p=s.state==='windup'?1-s.left/ARCHER_CONFIG.windup:s.state==='release'?1-s.left/ARCHER_CONFIG.release:0}else if(e.stalker&&['windup','strike','recover','stunned'].includes(e.stalker.state)){const s=e.stalker;state=s.state==='windup'?'skill':s.state==='strike'?'dash':s.state==='stunned'?'hurt':'idle';p=s.state==='windup'?1-s.left/STALKER_CONFIG.windup:s.state==='strike'?1-s.left/STALKER_CONFIG.strike:0}else if(e.runner&&e.runner.state!=='approach'){const s=e.runner;state=s.state==='windup'?'skill':s.state==='charge'?'dash':s.state==='stunned'?'hurt':'idle';p=s.state==='windup'?1-s.left/RUNNER_CONFIG.windup:s.state==='charge'?1-s.left/RUNNER_CONFIG.charge:0}else if(e.cast||e.contactWindup>0||e.chargeWindup>0){state='skill';p=e.cast?1-e.cast.left/e.cast.total:e.contactWindup>0?1-e.contactWindup/.3:1-e.chargeWindup/.45}else if(e.charging>0){state='dash';p=Math.min(.99,1-e.charging/.42)}else if(e.attackAnim>0){state='attack';p=Math.min(.99,1-e.attackAnim/.4)}
  c.save();c.fillStyle='#07161b77';c.beginPath();c.ellipse(e.x,e.y+e.size*.6,e.size*.9,e.size*.3,0,0,Math.PI*2);c.fill();
  if(e.chapter>=4&&e.type!==4&&!e.boss)c.filter=e.chapter===4?'saturate(1.3)':e.chapter===5?'hue-rotate(305deg)':'hue-rotate(95deg) saturate(1.5)';
  if(e.chapter===1&&e.boss&&e.bossTier===1)c.filter='sepia(.8) hue-rotate(45deg) saturate(.8)';
@@ -2235,8 +2253,13 @@ function drawEnemyMotion(c,e,t){
  if(e.archetype===EATER_CONFIG.archetype)c.filter='hue-rotate(285deg) saturate(.65)';
  if(isShadowStalker(e)&&e.flash<=.07)c.filter='brightness(.7) saturate(.7)';
  if(e.spawnGrace>0)c.globalAlpha=.45;
- const facing=e.stalker&&['windup','strike'].includes(e.stalker.state)?Math.cos(e.stalker.angle)<0:e.runner&&['windup','charge'].includes(e.runner.state)?Math.cos(e.runner.angle)<0:!!run&&run.x<e.x;
- paintAnimated(c,id,state,p,e.x,e.y+e.size*.6,e.boss?155:e.elite?90:e.type===1?78:72,e.boss?145:e.elite?85:e.archetype===EATER_CONFIG.archetype?78:e.type===1?44:60,facing);c.restore();
+ const facing=e.brute&&['windup','charge'].includes(e.brute.state)?Math.cos(e.brute.angle)<0:e.archer&&['windup','release'].includes(e.archer.state)?Math.cos(e.archer.angle)<0:e.stalker&&['windup','strike'].includes(e.stalker.state)?Math.cos(e.stalker.angle)<0:e.runner&&['windup','charge'].includes(e.runner.state)?Math.cos(e.runner.angle)<0:!!run&&run.x<e.x;
+ const reaction=run&&sampleActorMotion(run,e,reducedMotion),windup=e.bossCast?Math.max(0,Math.min(1,1-e.bossCast.left/e.bossCast.total)):0;
+ c.save();c.translate(e.x,e.y);
+ if(reaction){c.translate(reaction.x,reaction.y);c.rotate(reaction.tilt);c.scale(reaction.sx,reaction.sy);if(!e.dead&&!reaction.release){state='hurt';p=reaction.hurtPhase}}
+ else if(windup&&!reducedMotion){c.translate(0,Math.sin(windup*Math.PI)*2);c.scale(1+windup*.025,1-windup*.025)}
+ c.translate(-e.x,-e.y);
+ paintAnimated(c,id,state,p,e.x,e.y+e.size*.6,e.boss?155:e.elite?90:e.type===1?78:72,e.boss?145:e.elite?85:e.archetype===EATER_CONFIG.archetype?78:e.type===1?44:60,facing);c.restore();c.restore();
  // The Briar Sentinel shares the forest guardian body, with thorn-covered shoulders.
  if(e.chapter===1&&e.boss&&e.bossTier===1&&!e.dead){c.save();c.strokeStyle='#526e45';c.lineWidth=3;for(const side of [-1,1]){c.beginPath();c.moveTo(e.x+side*26,e.y-35);c.lineTo(e.x+side*40,e.y-65);c.lineTo(e.x+side*33,e.y-95);c.stroke();for(let i=0;i<3;i++){const x=e.x+side*(34+i%2*5),y=e.y-55-i*15;c.beginPath();c.moveTo(x,y);c.lineTo(x+side*10,y-9);c.lineTo(x+side*4,y-4);c.stroke()}}c.restore()}
  if(!e.dead&&(e.cast||e.contactWindup>0||e.chargeWindup>0)){const progress=e.cast?1-e.cast.left/e.cast.total:e.contactWindup>0?1-e.contactWindup/.3:1-e.chargeWindup/.45;c.save();c.strokeStyle=chapters[e.chapter-1].accent;c.lineWidth=2;c.globalAlpha=.5+progress*.5;c.beginPath();c.ellipse(e.x,e.y+10,e.size+8,e.size*.45+5,0,0,Math.PI*2);c.stroke();if(e.chargeWindup>0){c.beginPath();c.moveTo(e.x,e.y);c.lineTo(e.x+Math.cos(e.chargeAngle)*100,e.y+Math.sin(e.chargeAngle)*100);c.stroke()}c.restore()}
@@ -2382,30 +2405,102 @@ function snapshot(){if(run&&run.hp>0){save.expedition=packRun(run);oldPersist()}
 function showPage(page){
  if(page==='battle'&&run&&Number.isFinite(run.heroCooldown))run.hero.cd=run.heroCooldown;
  if(run&&page!=='battle'){toast('Save & return from the pause menu before managing camp.');return}
- currentPage=page;document.body.classList.toggle('playing',page==='battle');
+ currentPage=page;document.body.dataset.page=page;$('#storeNavigation').classList.toggle('hidden',!['armory','supplies','forge','camp'].includes(page));$$('[data-store]').forEach(b=>{if(b.dataset.store===page)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});document.body.classList.toggle('playing',page==='battle');
  $('#directorStatus').classList.toggle('hidden',page!=='battle');
  $('#lanternPanel').classList.toggle('hidden',page!=='battle');
- for(const [id,on] of [['#homeScreen',page==='home'],['#modesScreen',page==='modes'],['#managementScreen',['armory','heroes','skills','camp','journal'].includes(page)],['#battleLayout',page==='battle'],['#objectiveHud',page==='battle']])$(id).classList.toggle('hidden',!on);
- $$('[data-page]').forEach(b=>{if(b.dataset.page===page)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
- if(['armory','heroes','skills','camp','journal'].includes(page)){
-  tab=page;$('#managementTitle').textContent={armory:'Weapon Shop',heroes:'Characters',skills:'Skills',camp:'Camp',journal:'The keeper’s journal'}[page];renderShop();
+ for(const [id,on] of [['#homeScreen',page==='home'],['#modesScreen',page==='modes'],['#managementScreen',['armory','supplies','armor','forge','heroes','skills','camp','journal'].includes(page)],['#battleLayout',page==='battle'],['#objectiveHud',page==='battle']])$(id).classList.toggle('hidden',!on);
+ $$('[data-page]').forEach(b=>{if(b.dataset.page===page||page==='supplies'&&b.dataset.page==='armory')b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+ if(['armory','supplies','armor','forge','heroes','skills','camp','journal'].includes(page)){
+  tab=page;$('#managementTitle').textContent={armory:'Weapon Shop',supplies:'Supplies & materials',armor:'Armor',forge:'Enhancement forge',heroes:'Characters',skills:'Skills',camp:'Camp',journal:'The keeper’s journal'}[page];renderShop();
  }
  refreshHome();window.scrollTo({top:0});
 }
 function refreshHome(){
  $('#recordSurvival').textContent='Local best survival: '+(save.records.survival||0)+'/180 seconds';
+ $('#continueGame').hidden=!save.expedition;$('#newGame').textContent=save.expedition?'New expedition':'Play';$('#newGame').classList.toggle('primary',!save.expedition);
  const e=save.expedition,h=e&&heroes.find(h=>h.id===e.heroId);$('#continueGame').disabled=!e;$('#continueSummary').textContent=e?`${modeNames[e.mode]} · ${h.name} · ${chapters[e.state.chapter-1].name} · Wave ${e.state.wave}/100`:'No expedition saved. Start a new game to carry the light.';
  if(e?.mode==='survival')$('#continueSummary').textContent='Survival · '+formatTime(e.state.time)+' / 3:00 · Seed '+e.state.director?.seed;
  $('#recordCampaign').textContent='Furthest campaign wave: '+(save.records.campaign||0)+'/600';$('#recordStory').textContent=save.storyComplete?'Story completed · '+(save.ending==='release'?'The remembered dawn':'The gilded dawn'):'Story progress: '+(save.records.story||0)+'/600 waves';$('#recordEndless').textContent='Best wave: '+(save.records.endless||0)+' · Score: '+num(save.endlessScore||0);
  const active=heroes.find(h=>h.id===save.hero);$('#homeHero').textContent=active.name+' · '+active.role;$('#managementSummary').textContent=active.name+' · '+weapons.find(w=>w.id===save.weapon).name+' · '+num(save.gold)+' gold';
  $('#homeHeroArt').src=spriteData['held_'+active.id+'_'+save.weapon]||spriteData[active.id];$('#homeHeroArt').alt=active.name+' holding '+weapons.find(w=>w.id===save.weapon).name;
 }
+function gearStars(state){return `<div class="gear-stars ${state.awakened?'awakened':''}" role="img" aria-label="${state.stars} of 7 stars${state.awakened?', Awakened':''}">${Array.from({length:7},(_,i)=>`<span class="${i<state.stars?'lit':''}" aria-hidden="true">★</span>`).join('')}<strong>${state.awakened?'Awakened':state.stars+' / 7'}</strong></div>`}
+function gearStatText(kind,item,state){const stats=gearStats(kind,item,state);return kind==='weapon'?'+'+stats.damageBonus+' bonus attack':'+'+stats.hp+' HP · '+(stats.reduction*100).toFixed(1)+'% protection'}
+function equipmentBuildText(r=null){
+ const weapon=r?(r.gearSnapshot?.weaponId||r.weapon.id):save.weapon,armor=r?(r.gearSnapshot?.armorId||'travel_cloak'):save.armor;
+ const ws=r?(r.gearSnapshot?.weaponUpgrade||emptyEnhancement()):gearEnhancement(save,'weapon',weapon),as=r?(r.gearSnapshot?.armorUpgrade||emptyEnhancement()):gearEnhancement(save,'armor',armor);
+ const rank=s=>s.awakened?'Awakened':s.stars+'★';
+ return `${weapons.find(w=>w.id===weapon)?.name||'Weapon'} · ${rank(ws)}<br>${ARMORS.find(a=>a.id===armor)?.name||'Traveler’s Cloak'} · ${rank(as)}`;
+}
+function equipmentEnhance(kind,id,options={}){
+ if(run)return {ok:false,reason:'expedition'};const result=enhanceGear(save,kind,id,weapons,options);if(!result.attempted)return result;
+ persist();renderShop();toast(result.ok?(result.state.awakened?'Awakened · '+gearItem(kind,id,weapons).name:gearItem(kind,id,weapons).name+' enhanced to '+result.state.stars+' stars'):'Enhancement failed · stars retained · next chance improved');return result;
+}
+function materialName(id){return MATERIALS.find(m=>m.id===id)?.short||CONSUMABLES.find(m=>m.id===id)?.name||id}
+function storeIntro(text,page){return '<div class="tab-intro"><p>'+text+'</p></div>'}
+function bindStoreLinks(){$$('[data-store]').forEach(b=>b.onclick=()=>showPage(b.dataset.store))}
+function purchaseSupply(id){if(run||!buySupply(save,id))return false;persist();renderShop();toast(SUPPLY_SHOP.find(i=>i.id===id).name+' added to your pack');return true}
+function useBattleSupply(id){
+ const r=run;if(!r)return {ok:false,reason:'expedition'};const result=consumeSupply(save,r,id);
+ if(!result.ok){toast({empty:'No supply in your pack.',cooldown:'Supplies recover in '+Math.ceil(r.supplyCooldown||0)+' seconds.',full:'Already full. Your supply was kept.',active:'That tonic is already active.'}[result.reason]||'Cannot use that supply.');return result}
+ addCombatFx(r,'heroSkill',r.x,r.y,{theme:id==='oil_flask'?'sun':'heal',shape:'bloom',radius:35,life:.5});textPop(r.x,r.y-55,result.item.name,id==='oil_flask'?'#ffd777':'#b5f3ca');persist();updateHud();return result;
+}
+function openBattlePack(){
+ const r=run;if(!r||r.paused)return;r.paused=true;keys.clear();pointer=null;
+ const render=()=>{
+  const html='<p>Using a supply pauses the fight. Effects and the shared 8-second cooldown advance only while playing.</p><div class="battle-pack">'+CONSUMABLES.filter(i=>i.use==='battle').map(item=>`<section><img class="pack-item-art" src="${SUPPLY_ART_FILES[item.id]}" alt=""><div><strong>${item.name} · ${save.inventory[item.id]}</strong><p class="small muted">${item.description}${r.supplyBuffs?.[item.id]>0?' Active: '+Math.ceil(r.supplyBuffs[item.id])+'s.':''}</p></div><button data-supply-use="${item.id}" ${save.inventory[item.id]<1||(r.supplyCooldown||0)>0||r.supplyBuffs?.[item.id]>0||item.id==='healing_potion'&&r.hp>=r.maxHp||item.id==='oil_flask'&&r.lantern?.fuel>=100?'disabled':''}>${r.supplyBuffs?.[item.id]>0?'Active':(r.supplyCooldown||0)>0?'Wait':item.id==='healing_potion'&&r.hp>=r.maxHp||item.id==='oil_flask'&&r.lantern?.fuel>=100?'Full':'Use'}</button></section>`).join('')+'</div><p class="small muted">'+((r.supplyCooldown||0)>0?'Supply cooldown: '+Math.ceil(r.supplyCooldown)+'s':'Ready · R drinks a health draught during play.')+'</p>';
+  showModal('Field supplies',html,[{label:'Return to battle',primary:true,fn:()=>{closeModal();if(run===r){r.paused=false;keys.clear();canvas.focus({preventScroll:true})}}}],'supplies');
+  $$('[data-supply-use]').forEach(b=>b.onclick=()=>{useBattleSupply(b.dataset.supplyUse);render()});
+ };render();
+}
+function renderSupplyShop(){
+ updateWallet();let html=storeIntro('Bring draughts, oil and tonics into battle. Open your pack with I. Supplies share an 8-second use cooldown. Boss cores and dawn essence can only be earned in combat.','supplies');
+ for(const item of SUPPLY_SHOP){const owned=Object.entries(item.contents).map(([id])=>save.inventory[id]).join(' / ');html+=`<article class="item supply-card" data-supply-icon="${item.icon}" data-supply-id="${item.id}"><div class="supply-heading"><span class="supply-art" aria-hidden="true"></span><span class="badge badge-common">${item.use==='forge'?'Forge aid':item.use==='battle'?'Battle supply':'Materials'}</span></div><h3>${item.name}</h3><p>${item.description}</p><p class="stat">In pack: ${owned}</p><div class="item-bottom"><span>${num(item.cost)} gold</span><button data-supply-buy="${item.id}" ${save.gold<item.cost||run?'disabled':''}>Buy</button></div></article>`}
+ html+='<article class="item material-pouch"><h3>Your material pouch</h3><ul class="material-counts">'+MATERIALS.map(m=>'<li><span>'+m.name+'</span><strong>'+num(save.inventory[m.id])+'</strong></li>').join('')+'</ul><p class="small muted">Enemies drop fragments. Elites add dust. Bosses grant cores; final bosses grant dawn essence.</p></article>';
+ $('#shop').innerHTML=html;$('#shop').classList.remove('journal-list');$('#shop').setAttribute('aria-labelledby','managementTitle');bindStoreLinks();$$('[data-supply-buy]').forEach(b=>b.onclick=()=>purchaseSupply(b.dataset.supplyBuy));
+}
+function recipeText(recipe){return Object.entries(recipe).map(([id,n])=>`${n} ${materialName(id)}`).join(' · ')}
+function recipeMarkup(recipe){return '<ul class="forge-recipe">'+Object.entries(recipe).map(([id,n])=>`<li class="${save.inventory[id]<n?'recipe-missing':''}"><span>${materialName(id)}</span><strong>${save.inventory[id]} / ${n}</strong></li>`).join('')+'</ul>'}
+function openForgeAttempt(kind,id){
+ if(run)return;const item=gearItem(kind,id,weapons);if(!item)return;const state=gearEnhancement(save,kind,id),next=nextEnhancement(state);if(!next)return;
+ const cost=enhancementCost(item,state),recipe=enhancementRecipe(kind,item,state),pity=save.forgePity[kind+':'+id]||0,chance=enhancementChance(save,kind,id),affordable=save.gold>=cost&&Object.entries(recipe).every(([key,n])=>save.inventory[key]>=n);
+ showModal(next.awakened?'Awaken '+item.name:'Enhance '+item.name,`<div class="forge-odds"><strong id="forgeChance" aria-live="polite">${Math.round(chance*100)}%</strong><span>success chance · ${next.awakened?'Awakened':next.stars+'★'}</span></div><p>Next: ${gearStatText(kind,item,next)}</p>${recipeMarkup(recipe)}<p>${num(cost)} gold · You have ${num(save.gold)}</p><div class="forge-support"><label><img class="forge-support-art" src="${SUPPLY_ART_FILES.forge_catalyst}" alt=""><input id="forgeCatalyst" type="checkbox" ${save.inventory.forge_catalyst<1||chance>=1?'disabled':''}> Ember catalyst (${save.inventory.forge_catalyst}) · +15% chance</label><label><img class="forge-support-art" src="${SUPPLY_ART_FILES.preservation_ward}" alt=""><input id="forgeWard" type="checkbox" ${save.inventory.preservation_ward<1?'disabled':''}> Preservation ward (${save.inventory.preservation_ward}) · save materials on failure</label></div><p class="small muted">Failure spends gold and recipe materials. Stars are never lost. A ward preserves materials and is consumed only on failure. Catalysts are always consumed. ${pity>=5?'This attempt is guaranteed after five failures.':pity+' / 5 failures · +10% per failure; the sixth attempt is guaranteed.'}</p>${!affordable?'<p class="recipe-missing">Gather the missing materials or gold before attempting. Boss cores come from bosses; final bosses also drop dawn essence.</p>':''}`,[{label:'Attempt · '+num(cost)+' gold',primary:true,fn:()=>{
+  const result=equipmentEnhance(kind,id,{catalyst:!!$('#forgeCatalyst').checked,ward:!!$('#forgeWard').checked});if(!result?.attempted){toast('Recipe or gold is missing.');return}
+  showModal(result.ok?(result.state.awakened?'Awakening complete':'Enhancement successful'):'The embers faltered',`<p><strong>${item.name}</strong> · ${result.state.awakened?'Awakened':result.state.stars+'★'}</p><p>${result.ok?'Your equipment grew stronger.':result.protectedFailure?'Your ward preserved the recipe materials. Gold and the ward were spent.':'Gold and recipe materials were spent. Your earned stars remain.'}</p>${!result.ok?'<p>Next base chance: <strong>'+Math.round(enhancementChance(save,kind,id)*100)+'%</strong> · '+result.failures+' / 5 failures</p>':''}`,[{label:'Back to forge',primary:true,fn:closeModal}],result.ok?'forge-success':'forge-failed');
+ }},{label:'Cancel',fn:closeModal}],'forge');
+ $('#modalActions button').disabled=!affordable;
+ $('#forgeCatalyst').onchange=()=>{$('#forgeChance').textContent=Math.round(enhancementChance(save,kind,id,{catalyst:!!$('#forgeCatalyst').checked})*100)+'%'};
+}
+function equipArmor(id){if(run||!buyArmor(save,id))return;persist();renderShop();toast(ARMORS.find(a=>a.id===id).name+' equipped')}
+function renderEquipmentView(){
+ ensureProgress();updateWallet();let html='';
+ if(currentPage==='armor'){
+  html='<p class="tab-intro">One shared armor slot for every hero. Armor adds health and protection to your next expedition. Enhance owned pieces at the forge.</p>';
+  for(const item of ARMORS){const owned=save.unlockedArmors.includes(item.id),active=save.armor===item.id,state=gearEnhancement(save,'armor',item.id),required=Math.max(1,item.tier+1),locked=save.chapterUnlocked<required;
+   html+=`<article class="item upgrade-card armor-card ${active?'equipped':''}" data-armor-id="${item.id}"><div class="item-top"><span class="armor-art" aria-hidden="true"></span><div><h3>${item.name} ${active?'<span class="badge badge-active">Equipped</span>':''}</h3><p class="stat">${gearStatText('armor',item,state)}</p></div></div>${gearStars(state)}<p>${item.description}</p><div class="item-bottom"><span class="small muted">${owned?'Owned':locked?'Unlock chapter '+required:num(item.cost)+' gold'}</span><button data-armor-equip="${item.id}" ${run||active||!owned&&(locked||save.gold<item.cost)?'disabled':''}>${active?'Equipped':owned?'Equip':locked?'Locked':'Buy & equip'}</button></div></article>`;
+  }
+ }else{
+  html=storeIntro('Forge recipes: 0 → 7 stars → Awakened. Failures spend materials and gold, keep your stars, and improve the next attempt. Bosses drop cores; final bosses drop dawn essence.','forge');
+  const list=[...weapons.filter(w=>w.classId===heroes.find(h=>h.id===save.hero).classId&&save.unlockedWeapons.includes(w.id)).map(item=>({kind:'weapon',item})),...ARMORS.filter(a=>save.unlockedArmors.includes(a.id)).map(item=>({kind:'armor',item}))];
+  for(const {kind,item} of list){const state=gearEnhancement(save,kind,item.id),next=nextEnhancement(state),cost=enhancementCost(item,state),recipe=enhancementRecipe(kind,item,state),chance=enhancementChance(save,kind,item.id),pity=save.forgePity[kind+':'+item.id]||0,active=kind==='weapon'?save.weapon===item.id:save.armor===item.id;
+   html+=`<article class="item upgrade-card forge-card ${state.awakened?'gear-awakened':active?'equipped':''}" data-gear-kind="${kind}" data-gear-id="${item.id}"><div class="gear-heading">${kind==='weapon'?`<img class="forge-art" src="${spriteData[item.id]}" alt="">`:'<span class="armor-art" aria-hidden="true"></span>'}<div><span class="small muted">${kind==='weapon'?'Weapon':'Armor'}${active?' · Equipped':''}</span><h3>${item.name}</h3></div></div>${gearStars(state)}${next?`<div class="forge-chance"><strong>${Math.round(chance*100)}% success</strong><span>${pity}/5 failures</span></div><p class="recipe-summary">${recipeText(recipe)}</p><p class="gear-preview">${next.awakened?'Awakened: ':'Next: '}${gearStatText(kind,item,next)}</p>`:'<p class="gear-preview">Fully awakened. Its full power is yours.</p>'}<div class="item-bottom"><span class="small muted">${next?num(cost)+' gold':'Maximum'}</span><button data-gear-enhance="${kind}:${item.id}" ${run||!next?'disabled':''}>${state.awakened?'Awakened':state.stars===7?'Review awakening':'Forge · '+(state.stars+1)+'★'}</button></div></article>`;
+  }
+ }
+ $('#shop').innerHTML=html;$('#shop').classList.remove('journal-list');$('#shop').setAttribute('aria-labelledby','managementTitle');
+ bindStoreLinks();
+ $$('[data-armor-equip]').forEach(b=>b.onclick=()=>equipArmor(b.dataset.armorEquip));
+ $$('[data-gear-enhance]').forEach(b=>b.onclick=()=>{const [kind,id]=b.dataset.gearEnhance.split(':');openForgeAttempt(kind,id)});
+}
+const gearModalBefore=showModal;
+showModal=function(title,body,actions,kind=''){if(['prepare','pause'].includes(kind))body+='<p class="equipment-build"><strong>Equipment</strong><br>'+equipmentBuildText(run)+'</p><p class="small muted">Field pack · '+save.inventory.healing_potion+' draughts · '+save.inventory.oil_flask+' oil flasks · Open with I during battle. R drinks a draught.</p>';return gearModalBefore(title,body,actions,kind)};
 const oldRenderModesShop=renderShop;
 renderShop=function(){
- if(!['skills','camp','journal'].includes(currentPage)){oldRenderModesShop();$('#shop').classList.remove('journal-list');$('#shop').setAttribute('aria-labelledby','managementTitle');refreshHome();return}
+ if(currentPage==='supplies'){renderSupplyShop();refreshHome();return}
+ if(['armor','forge'].includes(currentPage)){renderEquipmentView();refreshHome();return}
+ if(!['skills','camp','journal'].includes(currentPage)){oldRenderModesShop();if(currentPage==='armory'){bindStoreLinks()}$('#shop').classList.remove('journal-list');$('#shop').setAttribute('aria-labelledby','managementTitle');refreshHome();return}
  updateWallet();ensureProgress();let html='';
  if(currentPage==='camp'){
-  html='<p class="tab-intro">Permanent upgrades. Every track has 200 levels, with milestones every 20. Benefits apply to your next expedition.</p>';
+  html=storeIntro('Permanent upgrades. Every track has 200 levels, with milestones every 20. Benefits apply to your next expedition.','camp');
   for(const [k,u] of Object.entries(upgrades)){const l=save.up[k],cost=price(k);html+=`<article class="item upgrade-card"><h3>${u.name}</h3><p>${u.desc}</p><div class="upgrade-level"><span>Level ${l} / 200</span><span>Milestone ${Math.floor(l/20)} / 10</span></div><progress class="upgrade-progress" aria-label="${u.name} level" max="200" value="${l}"></progress><p class="stat">Now: ${u.stat(l)}<br>Next: ${l===200?'Fully trained':u.stat(l+1)}</p><div class="item-bottom"><button data-camp-buy="${k}" ${l>=200||save.gold<cost||run?'disabled':''}>${l>=200?'Level 200 · Max':num(cost)+' gold'}</button></div></article>`}
   const pending=pendingGold();html+=`<article class="item upgrade-card"><h3>Lantern workshop income</h3><p>${(.05+save.up.camp*.05).toFixed(2)} gold per minute, stored for up to 8 hours. Combat and boss milestones remain your main income.</p><strong><span id="campPendingAmount">${num(pending)}</span> gold ready</strong><button id="campCollect" ${pending<1?'disabled':''}>Collect gold</button></article>`;
  }else if(currentPage==='skills'){
@@ -2419,6 +2514,7 @@ renderShop=function(){
  }
  $('#shop').innerHTML=html;$('#shop').setAttribute('aria-labelledby','managementTitle');$('#shop').classList.toggle('journal-list',currentPage==='journal');
  $$('[data-camp-buy]').forEach(b=>b.onclick=()=>buy(b.dataset.campBuy));$$('[data-skill-buy]').forEach(b=>b.onclick=()=>buySkill(b.dataset.skillBuy));$$('[data-skill-equip]').forEach(b=>b.onclick=()=>chooseSkill(b.dataset.skillEquip));
+ bindStoreLinks();
  if(currentPage==='camp')$('#campCollect').onclick=()=>{const n=pendingGold();if(n<1||run)return;save.gold+=n;save.lastClaim=Date.now();persist();renderShop();toast('Collected '+num(n)+' gold')};refreshHome();
 };
 function prepareMode(mode){
@@ -2430,6 +2526,7 @@ function prepareMode(mode){
 const originalModeStart=startRun;
 startRun=function(){
  if(run)return;ensureProgress();originalModeStart();const r=run;r.mode=chosenMode;r.cycle=0;r.totalWave=(r.chapter-1)*100+1;r.score=0;r.storyRescues=0;r.activeSkill=selectedSkill(r.hero)[0];r.skillRank=skillRank(selectedSkill(r.hero));r.hero={...r.hero,cd:selectedSkill(r.hero)[3]*(1-save.up.focus*.00175)};r.damageReduce=Math.min(.3,save.up.armor*.0015);r.regen=save.up.recovery*.015;r.skillTasks=[];r.sentries=[];r.skillFields=[];r.bossesCleared=[];r.blessingChoices=null;r.pendingBreak=null;setSectionObjective(r);save.expedition=packRun(r);save.checkpoint=packRun(r);oldPersist();showPage('battle');if(r.mode==='story')openStory(r.chapter,0,()=>{r.paused=false;snapshot()});else banner(modeNames[r.mode]+' · Wave 1 / 100');updateHud();
+ r.damageReduce=Math.min(.5,r.damageReduce+gearStats('armor',ARMORS.find(a=>a.id===r.gearSnapshot.armorId),r.gearSnapshot.armorUpgrade).reduction);save.checkpoint=packRun(r);
  r.baseDamage=r.dmg;if(r.mode==='survival'){$('#areaStatus').textContent='Survival · Three minutes to dawn';banner('Survive until 3:00 · Final guardian optional')}snapshot();if(!r.paused)canvas.focus({preventScroll:true});
 };$('#start').onclick=startRun;
 const previousSetupModes=setupChapter;
@@ -2437,22 +2534,26 @@ setupChapter=function(r){previousSetupModes(r);r.baseDamage=r.baseDamage||r.dmg;
 function resumeRun(snapshotData=save.expedition){
  if(run||!validExpedition(snapshotData)){toast('No valid expedition to continue.');return false}
  ensureProgress();const h=heroes.find(h=>h.id===snapshotData.heroId),w=weapons.find(w=>w.id===snapshotData.weaponId);if(!save.unlocked.includes(h.id)||!save.unlockedWeapons.includes(w.id)||w.classId!==h.classId){toast('The saved equipment is unavailable.');return false}
- chosenMode=snapshotData.mode;const r=JSON.parse(JSON.stringify(snapshotData.state));r.lantern=r.lantern||createLanternState();r.enemies.forEach(e=>{if(isShadowStalker(e)){e.cast=null;e.contactWindup=0}if(isRunner(e)&&!e.runner){e.runner=createRunnerState();e.charging=0;e.chargeWindup=0;e.contactWindup=0;e.cast=null}});r.director=r.director||createDirector('legacy-'+snapshotData.heroId+'-'+r.chapter+'-'+r.wave+'-'+r.time);r.hero={...h,cd:(skillBook[h.classId].find(s=>s[0]===r.activeSkill)||skillBook[h.classId][0])[3]*(1-save.up.focus*.00175)};r.weapon=w;r.mode=chosenMode;r.paused=false;r.mapReady=0;r.ghosts=[];r.corpses=[];r.particles=[];r.texts=[];r.shots.forEach(s=>s.hit=new Set((s.hit||[]).map(i=>r.enemies[i]).filter(Boolean)));run=r;keys.clear();pointer=null;buildWorld(r.chapter);$('#intro').classList.add('hidden');$('#shade').classList.add('hidden');$('#hud').classList.remove('hidden');$('#controls').classList.remove('hidden');$('#areaTitle').textContent=chapters[r.chapter-1].name;$('#areaStatus').textContent=modeNames[r.mode]+' · Expedition resumed';showPage('battle');updateHud();canvas.focus({preventScroll:true});
+ chosenMode=snapshotData.mode;const r=JSON.parse(JSON.stringify(snapshotData.state));r.lantern=r.lantern||createLanternState();r.enemies.forEach(e=>{if(isBrute(e)&&!e.brute){e.brute=createBruteState();e.charging=0;e.chargeWindup=0;e.contactWindup=0;e.cast=null}if(isCoverArcher(e)&&!e.archer){e.archer=createArcherState(e.phase||0);e.cast=null;e.contactWindup=0}if(isShadowStalker(e)){e.cast=null;e.contactWindup=0}if(isRunner(e)&&!e.runner){e.runner=createRunnerState();e.charging=0;e.chargeWindup=0;e.contactWindup=0;e.cast=null}});r.director=r.director||createDirector('legacy-'+snapshotData.heroId+'-'+r.chapter+'-'+r.wave+'-'+r.time);r.hero={...h,cd:(skillBook[h.classId].find(s=>s[0]===r.activeSkill)||skillBook[h.classId][0])[3]*(1-save.up.focus*.00175)};r.weapon=w;r.mode=chosenMode;r.paused=false;r.mapReady=0;r.ghosts=[];r.corpses=[];r.particles=[];r.texts=[];r.shots.forEach(s=>s.hit=new Set((s.hit||[]).map(i=>r.enemies[i]).filter(Boolean)));run=r;keys.clear();pointer=null;buildWorld(r.chapter);$('#intro').classList.add('hidden');$('#shade').classList.add('hidden');$('#hud').classList.remove('hidden');$('#controls').classList.remove('hidden');$('#areaTitle').textContent=chapters[r.chapter-1].name;$('#areaStatus').textContent=modeNames[r.mode]+' · Expedition resumed';showPage('battle');updateHud();canvas.focus({preventScroll:true});
  if(r.blessingChoices?.length)showBlessings();else if(r.pendingBreak)showBossBreak(r);else if(r.pendingChapter)showChapterBreak(r);else if(r.pendingEnding)showEnding(r);else if(r.pendingStory){const [ch,beat]=r.pendingStory;openStory(ch,beat,()=>{r.paused=false;snapshot()})}else banner('Welcome back · Wave '+r.wave+'/100');return true;
 }
 function leaveToHome(){if(!run)return;snapshot();changingRun=true;run=null;changingRun=false;keys.clear();pointer=null;closeModal();$('#hud').classList.add('hidden');$('#controls').classList.add('hidden');$('#bossbar').classList.add('hidden');$('#comboDock').classList.add('hidden');$('#banner').classList.add('hidden');showPage('home');persist()}
-pauseGame=function(){if(!run)return;if(run.paused){if(modalKind==='pause'){closeModal();run.paused=false}return}run.paused=true;keys.clear();pointer=null;snapshot();showModal('A breath before the dark',`<p>${modeNames[run.mode]} · ${chapters[run.chapter-1].name}<br>${run.mode==='survival'?'Active time '+formatTime(run.time)+' / 3:00':'Wave '+run.wave+'/100'} · Level ${run.level}<br>Seed ${storyEsc(run.director.seed)}</p><p>Your expedition is saved. Save & return lets you manage camp and continue later with this expedition’s existing build.</p>`,[{label:'Resume',primary:true,fn:()=>{closeModal();run.paused=false}},{label:'Save & return to home',fn:leaveToHome},{label:'End expedition & bank gold',fn:()=>{closeModal();endRun(false,true)}}],'pause')};$('#pause').onclick=pauseGame;
+pauseGame=function(){if(!run)return;if(run.paused){if(modalKind==='pause'||modalKind==='supplies'){closeModal();run.paused=false}return}run.paused=true;keys.clear();pointer=null;snapshot();showModal('A breath before the dark',`<p>${modeNames[run.mode]} · ${chapters[run.chapter-1].name}<br>${run.mode==='survival'?'Active time '+formatTime(run.time)+' / 3:00':'Wave '+run.wave+'/100'} · Level ${run.level}<br>Seed ${storyEsc(run.director.seed)}</p><p>Your expedition is saved. Save & return lets you manage camp and continue later with this expedition’s existing build.</p>`,[{label:'Resume',primary:true,fn:()=>{closeModal();run.paused=false}},{label:'Save & return to home',fn:leaveToHome},{label:'End expedition & bank gold',fn:()=>{closeModal();endRun(false,true)}}],'pause')};$('#pause').onclick=pauseGame;
 function globalWave(r){return(r.cycle||0)*600+(r.chapter-1)*100+r.wave}
 function recordWave(r){if(r.mode==='survival'){save.records.survival=Math.max(save.records.survival||0,Math.min(180,Math.floor(r.time)));r.totalWave=r.wave;return}const n=globalWave(r);save.records[r.mode]=Math.max(save.records[r.mode]||0,n);if(r.mode==='endless')save.endlessScore=Math.max(save.endlessScore||0,Math.floor(r.kills*10+n*100+r.time));r.totalWave=n}
 spawnEnemy=function(boss=false,forcedType,options={}){
- const r=run;if(!r)return null;const isEater=options.archetype===EATER_CONFIG.archetype,isStalker=options.archetype===STALKER_CONFIG.archetype;if(isStalker&&(boss||r.chapter!==STALKER_CONFIG.chapter||r.enemies.filter(e=>e.hp>0&&isShadowStalker(e)).length>=STALKER_CONFIG.maxAlive))return null;if(isEater&&(boss||r.enemies.filter(e=>e.hp>0&&e.archetype===EATER_CONFIG.archetype).length>=EATER_CONFIG.maxAlive))return null;const director=ensureDirector(r),pressure=difficultyProfile(r),type=boss?99:isEater?3:isStalker?STALKER_CONFIG.type:forcedType??difficultyEnemyType(r),size=boss?30:isEater?14:[12,9,14,11,18][type];
+ const r=run;if(!r)return null;const wardenRequested=options.archetype===WARDEN_CONFIG.archetype;if(wardenRequested&&(boss||r.enemies.filter(e=>e.hp>0&&isWarden(e)).length>=WARDEN_CONFIG.maxAlive))return null;const mimicRequested=options.archetype===MIMIC_CONFIG.archetype;if(mimicRequested&&(boss||r.enemies.filter(e=>e.hp>0&&isMimic(e)).length>=MIMIC_CONFIG.maxAlive))return null;const isEater=options.archetype===EATER_CONFIG.archetype,isStalker=options.archetype===STALKER_CONFIG.archetype;if(isStalker&&(boss||r.chapter!==STALKER_CONFIG.chapter||r.enemies.filter(e=>e.hp>0&&isShadowStalker(e)).length>=STALKER_CONFIG.maxAlive))return null;if(isEater&&(boss||r.enemies.filter(e=>e.hp>0&&e.archetype===EATER_CONFIG.archetype).length>=EATER_CONFIG.maxAlive))return null;const director=ensureDirector(r),pressure=difficultyProfile(r),type=boss?99:wardenRequested?2:mimicRequested?3:isEater?3:isStalker?STALKER_CONFIG.type:forcedType??difficultyEnemyType(r),size=boss?30:isEater?14:[12,9,14,11,18][type];
  const point=directorSpawnPoint(r,boss,size);if(!point)return null;
  const tier=boss?(options.tier??(r.mode==='survival'?1:Math.ceil(r.wave/20))):0,bossIndex=Math.ceil(pressure.wave/20);
  const hp=Math.min(1e12,(boss?1450+140*bossIndex:[36,26,52,44,130][type])*pressure.vitality);
  const e={x:point.x,y:point.y,hp,maxHp:hp,type,boss,chapter:r.chapter,bossTier:tier,name:boss?bossNames[r.chapter-1][tier-1]:chapters[r.chapter-1].family[type],speed:(boss?32:[36,65,29,45,27][type])*pressure.speed,size,dmg:Math.min(1e9,(boss?28+Math.min(30,bossIndex*.9):[11,9,14,13,24][type])*pressure.damage),flash:0,attack:0,phase:directorRandom(director,'placement'),shoot:boss?2.4:2.2,charging:0,chargeCd:3,traitCd:3,stun:0,attackAnim:0,spawnGrace:options.arrival?DIRECTOR_CONFIG.arrivalSeconds:0};
  if(r.mode==='story'&&r.story){e.storyRoom=r.story.combatRoom;e.stun=.6;e.attack=1}
+ if(wardenRequested){e.archetype=WARDEN_CONFIG.archetype;e.name='Void Warden';e.warden=createWardenState(director.spawned+1)}
+ if(mimicRequested){e.archetype=MIMIC_CONFIG.archetype;e.name='Spectral Mimic';e.mimic=createMimicState(director.spawned+1)}
  if(isEater){e.archetype=EATER_CONFIG.archetype;e.name='Lantern Eater';e.eater=createEaterState()}
+ if(isBrute(e))e.brute=createBruteState();
  if(isRunner(e))e.runner=createRunnerState();
+ if(isCoverArcher(e))e.archer=createArcherState(e.phase);
  if(isStalker){e.archetype=STALKER_CONFIG.archetype;e.name='Shadow Stalker';e.stalker=createStalkerState(e.phase<.5?-1:1)}
  director.spawned++;r.enemies.push(e);return e;
 };
@@ -2511,7 +2612,7 @@ const priorModeHit=hit;
 hit=function(e,dmg,isSkill=false,isBurnTick=false){const alive=e.hp>0;if(run?.empowered>0&&!isSkill&&!isBurnTick){dmg*=1.8;run.empowered--}if(isSkill)dmg*=1+(run?.skillRank||0)*.01;priorModeHit(e,dmg,isSkill,isBurnTick);if(alive&&e.hp<=0&&run)run.score=(run.score||0)+(e.boss?1000:10)};
 function castAlternate(r){
  const id=r.activeSkill,rank=1+(r.skillRank||0)*.01,f=(1+save.up.power*.035)*rank,origin=firingPoint(r),color=r.hero.color;
- const burst=(radius,damage,stun=0)=>{r.effects.push({x:r.x,y:r.y,r:radius,t:.6,max:.6,color});for(const e of r.enemies)if(e.hp>0&&Math.hypot(e.x-r.x,e.y-r.y)<radius){hit(e,damage*(1+save.up.power*.035),true);e.stun=Math.max(e.stun||0,stun);const a=Math.atan2(e.y-r.y,e.x-r.x);e.x+=Math.cos(a)*20;e.y+=Math.sin(a)*20}};
+ const burst=(radius,damage,stun=0)=>{r.effects.push({x:r.x,y:r.y,r:radius,t:.6,max:.6,color});for(const e of r.enemies)if(e.hp>0&&Math.hypot(e.x-r.x,e.y-r.y)<radius){hit(e,damage*(1+save.up.power*.035),true);e.stun=Math.max(e.stun||0,stun);const a=Math.atan2(e.y-r.y,e.x-r.x);displaceEnemy(run,e,Math.cos(a)*20,Math.sin(a)*20)}};
  if(id==='beacon'||id==='renewal'){r.skillFields.push({x:r.x,y:r.y,t:id==='beacon'?8:10,r:125,heal:(id==='beacon'?4:7)*f,tick:0,dmg:r.dmg*.5});r.hp=Math.min(r.maxHp,r.hp+15*f)}
  if(id==='soulflame'||id==='snare'){for(let i=-3;i<=3;i++)shoot(origin.x,origin.y,r.aim+i*.16,r.dmg*(id==='soulflame'?2:1.5)*f,370,true);if(id==='snare')burst(210,25,2.5)}
  if(id==='shadowstep'){r.dashCd=0;dash();for(let i=-1;i<=1;i++)shoot(origin.x,origin.y,r.aim+i*.08,r.dmg*3*f,480,true)}
@@ -2571,7 +2672,7 @@ showPage('home');
 
 // Complete armed walking poses. Each frame is one uncut character drawing.
 function walkPhase(r){return ((r.anim.strideDistance ?? r.anim.walkClock*125)/64)%1}
-function walkingFrame(r){return Math.floor(walkPhase(r)*8)%8}
+function walkingFrame(r){return locomotionFrame(r.anim.strideDistance??r.anim.walkClock*125)}
 const beforeDistanceWalk=update;
 update=function(dt){const r=run;if(!r||r.paused)return beforeDistanceWalk(dt);const x=r.x,y=r.y,dashing=r.dashTime>0;beforeDistanceWalk(dt);const distance=Math.hypot(r.x-x,r.y-y);r.anim.moving=distance>.001&&!dashing&&r.dashTime<=0;if(r.anim.moving){r.anim.strideDistance=(r.anim.strideDistance||0)+Math.min(distance,Math.max(1,r.speed*dt*1.6));r.anim.walkClock=r.anim.strideDistance/125}};
 const heroBeforeWalking=drawClassHero;
@@ -2623,6 +2724,28 @@ function storyConstrainMove(r,fromX,fromY,toX,toY,radius=11){
  for(let i=0;i<n;i++){if(!storySolid(r,x+dx,y,radius))x+=dx;if(!storySolid(r,x,y+dy,radius))y+=dy}r.x=x;r.y=y;
 }
 function storyMoveEnemy(r,e,from){if(r?.mode!=='story'||!r.story)return;const size=Math.min(18,Math.max(8,e.size*.65)),body={mode:'story',story:r.story,chapter:r.chapter,x:e.x,y:e.y};storyConstrainMove(body,from.x,from.y,e.x,e.y,size);e.x=body.x;e.y=body.y}
+function enemyTerrainRadius(e){return Math.min(18,Math.max(8,(e.size||12)*.65))}
+function constrainEnemyPosition(r,e){
+ // Arrival, stun, and stationary casts still need valid map positions.
+ e.x=Math.max(24,Math.min(MW-24,e.x));e.y=Math.max(24,Math.min(MH-24,e.y));
+ const radius=enemyTerrainRadius(e);if(r.mode!=='story'||!r.story||!storySolid(r,e.x,e.y,radius))return;
+ const room=Number.isInteger(e.storyRoom)&&e.storyRoom>=0&&e.storyRoom<storyRoomBoxes.length?e.storyRoom:r.story.combatRoom??r.story.activeRoom??0,b=storyRoomBoxes[room];
+ let point=null,distance=Infinity;
+ // Repair old saved enemies at the nearest free floor in their own room.
+ for(let y=b.ty;y<b.ty+b.th;y++)for(let x=b.tx;x<b.tx+b.tw;x++){
+  const p={x:x*STORY_TILE+STORY_TILE/2,y:y*STORY_TILE+STORY_TILE/2},d=(p.x-e.x)**2+(p.y-e.y)**2;
+  if(d<distance&&!storySolid(r,p.x,p.y,radius)){point=p;distance=d;}
+ }
+ if(!point)return;e.x=point.x;e.y=point.y;e.cast=null;e.contactWindup=0;e.charging=0;e.spawnGrace=Math.max(e.spawnGrace||0,.35);
+ if(e.boss)cancelBossSkill(e,'Repositioning');
+ if(e.warden)interruptWarden(e);if(e.mimic)interruptMimic(e);if(e.brute)interruptBrute(e);if(e.runner)interruptRunner(e);if(e.stalker)interruptStalker(e);if(e.archer)interruptArcher(e);if(e.eater)interruptEater(e);
+}
+function displaceEnemy(r,e,dx,dy){
+ if(!r||e.hp<=0)return;constrainEnemyPosition(r,e);
+ const from={x:e.x,y:e.y},x=Math.max(24,Math.min(MW-24,e.x+dx)),y=Math.max(24,Math.min(MH-24,e.y+dy));
+ if(r.mode==='story'&&r.story){const body={mode:r.mode,story:r.story,chapter:r.chapter,x,y};storyConstrainMove(body,from.x,from.y,x,y,enemyTerrainRadius(e));e.x=body.x;e.y=body.y;}
+ else{e.x=x;e.y=y;}
+}
 function storyLineOfSight(r,x1,y1,x2,y2,radius=2){const n=Math.max(1,Math.ceil(Math.hypot(x2-x1,y2-y1)/5));for(let i=1;i<=n;i++)if(storySolid(r,x1+(x2-x1)*i/n,y1+(y2-y1)*i/n,radius))return false;return true}
 // Preview first obstruction without changing crate HP, so actors and cover can be ordered.
 function traceStoryProjectile(r,s,x1,y1){
@@ -2857,7 +2980,7 @@ advanceWaves=function(r,dt){
   if(boss){r.bossTier=r.wave/20;if(!spawnEnemy(true,undefined,{arrival:true})){director.retry.left=.5;return}r.bossSpawned=true;r.bossDead=false;banner(bossNames[r.chapter-1][r.bossTier-1])}
   const result=spawnDirectorBatch(r,n,true);if(!boss&&!result.spawned){director.retry.left=.5;return}
   room.waveSpawned=r.wave;r.spawn=boss?pressure.storyReinforce:0;
-  if(!boss&&r.wave%5===0){promoteWaveElite(r.enemies.find(e=>e.hp>0&&!e.boss&&e.archetype!==EATER_CONFIG.archetype&&!isShadowStalker(e)),r);banner('Wave '+r.wave+'/100 · Elite hunt')}snapshot();return;
+  if(!boss&&r.wave%5===0){promoteWaveElite(r.enemies.find(e=>e.hp>0&&!e.boss&&!e.archetype),r);banner('Wave '+r.wave+'/100 · Elite hunt')}snapshot();return;
  }
 
  if(r.wave%20===0){r.waveTime=0;r.spawn-=dt;if(r.spawn<=0&&r.enemies.some(e=>e.boss&&e.hp>0)){const cap=pressure.escorts+3;let alive=r.enemies.filter(e=>!e.boss&&e.hp>0).length;spawnDirectorBatch(r,Math.max(0,Math.min(pressure.bossBatch,cap-alive)),true);r.spawn=pressure.storyReinforce}return}
@@ -3100,8 +3223,36 @@ const terrainMoveBeforeBossBlink=storyMoveEnemy;
 storyMoveEnemy=function(r,e,from){if(e.bossJustTeleported){e.bossJustTeleported=false;return}terrainMoveBeforeBossBlink(r,e,from)};
 const setupBeforeBossSkills=setupChapter;
 setupChapter=function(r){setupBeforeBossSkills(r);r.bossFields=[]};
-function drawBossLane(c,line,color,progress=0,active=false){c.save();c.lineCap='round';c.strokeStyle=color;c.globalAlpha=active?.5:.13;c.lineWidth=line.width;c.beginPath();c.moveTo(line.x,line.y);c.lineTo(line.x2,line.y2);c.stroke();c.globalAlpha=active?1:.8;c.lineWidth=active?4:2;if(!active)c.setLineDash([7,5]);c.beginPath();c.moveTo(line.x,line.y);c.lineTo(line.x2,line.y2);c.stroke();c.setLineDash([]);if(!active){const x=line.x+(line.x2-line.x)*progress,y=line.y+(line.y2-line.y)*progress;c.fillStyle='#fff0cd';c.beginPath();c.arc(x,y,4,0,Math.PI*2);c.fill()}c.restore()}
-function drawBossCircle(c,p,radius,color,progress=0,label=null){c.save();c.fillStyle=color+'24';c.strokeStyle=color;c.lineWidth=2;c.beginPath();c.arc(p.x,p.y,radius,0,Math.PI*2);c.fill();c.stroke();c.strokeStyle='#fff0cd';c.beginPath();c.arc(p.x,p.y,Math.max(4,radius*(1-progress)),0,Math.PI*2);c.stroke();if(label){c.font='11px Georgia';c.textAlign='center';c.fillStyle='#fff0cd';c.fillText(label,p.x,p.y+4)}c.restore()}
+// Boss warnings use exact damage geometry, with a dark keyline on busy terrain.
+function bossStroke(c,color,width,trace){
+ c.beginPath();trace();c.strokeStyle='#091319';c.lineWidth=width+3;c.stroke();c.strokeStyle=color;c.lineWidth=width;c.stroke();
+}
+function drawBossLane(c,line,color,progress=0,active=false){
+ const dx=line.x2-line.x,dy=line.y2-line.y,length=Math.hypot(dx,dy);if(length<1)return;
+ c.save();c.translate(line.x,line.y);c.rotate(Math.atan2(dy,dx));c.lineCap='butt';
+ const w=line.width/2;
+ const capsule=()=>{c.moveTo(0,-w);c.lineTo(length,-w);c.arc(length,0,w,-Math.PI/2,Math.PI/2);c.lineTo(0,w);c.arc(0,0,w,Math.PI/2,Math.PI*1.5)};
+ c.fillStyle=active?color+'38':'#0b141b9c';c.beginPath();capsule();c.fill();
+ // The outside rails stay still: motion only communicates time until release.
+ bossStroke(c,color,active?2.5:1.5,capsule);
+ c.globalAlpha*=active?.8:.18+progress*.2;c.fillStyle=color;c.fillRect(0,-w,length*(active?1:progress),line.width);c.globalAlpha/=(active?.8:.18+progress*.2);
+ const count=Math.max(1,Math.floor(length/38));c.strokeStyle='#fff1d2';c.lineWidth=1.3;
+ for(let i=0;i<count;i++){const x=18+i*38;c.beginPath();c.moveTo(x-4,-Math.min(6,w*.5));c.lineTo(x+2,0);c.lineTo(x-4,Math.min(6,w*.5));c.stroke()}
+ if(!active){c.fillStyle='#fff1d2';c.fillRect(Math.max(0,length*progress-1),-w,2,line.width)}
+ c.restore();
+}
+function drawBossCircle(c,p,radius,color,progress=0,label=null){
+ c.save();c.translate(p.x,p.y);c.fillStyle='#0b141b88';c.beginPath();c.arc(0,0,radius,0,Math.PI*2);c.fill();
+ c.fillStyle=color+'18';c.beginPath();c.arc(0,0,radius*Math.sqrt(progress),0,Math.PI*2);c.fill();
+ bossStroke(c,color,1.5,()=>c.arc(0,0,radius,0,Math.PI*2));
+ // A clockwise ivory timer and four fixed brackets distinguish warnings from impacts.
+ bossStroke(c,'#fff1d2',2,()=>c.arc(0,0,radius,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.max(.001,progress)));
+ c.strokeStyle=color;c.lineWidth=1;
+ for(let i=0;i<4;i++){c.save();c.rotate(i*Math.PI/2);c.beginPath();c.moveTo(radius-7,-5);c.lineTo(radius-3,-9);c.lineTo(radius+4,-9);c.lineTo(radius+4,9);c.lineTo(radius-3,9);c.lineTo(radius-7,5);c.stroke();c.restore()}
+ c.strokeStyle='#fff1d2';c.beginPath();c.moveTo(-4,0);c.lineTo(4,0);c.moveTo(0,-4);c.lineTo(0,4);c.stroke();
+ if(label){c.font='10px Georgia';c.textAlign='center';c.fillStyle='#0b141be8';c.fillRect(-27,10,54,16);c.fillStyle='#fff1d2';c.fillText(label,0,21)}c.restore();
+}
+
 function drawBossSkillEffects(c,r,t){
  c.save();for(const e of r.enemies){if(!e.boss||e.hp<=0||!e.bossCast)continue;const cast=e.bossCast,skill=bossSkillById(cast.id);if(!skill)continue;const p=Math.max(0,Math.min(1,1-cast.left/cast.total)),color=cast.color;
   c.globalAlpha=reducedMotion?.9:.8+Math.sin(t*9)*.12;
@@ -3193,9 +3344,9 @@ function combatProjectileImpact(r,s){if(s.vfxImpact)return;s.vfxImpact=true;cons
 function drawCombatProjectiles(c,r){
  for(const s of r.shots){if(s.t<=0)continue;const kind=projectileVisual(r,s),age=s.vfxAge||0,angle=Math.atan2(s.vy,s.vx),trail=s.vfxTrail||[],enemy=!!s.enemy,size=enemy?(s.bossOwner?27:21):r.hero.classId==='gunner'?22:29;
   c.save();c.strokeStyle=combatPalette[kind];c.lineCap='round';for(let i=1;i<trail.length;i++){c.globalAlpha=.09+i/trail.length*.22;c.lineWidth=1+i/trail.length*(enemy?3:4);c.beginPath();c.moveTo(trail[i-1].x,trail[i-1].y);c.lineTo(trail[i].x,trail[i].y);c.stroke()}c.restore();
-  combatStamp(c,kind,s.x,s.y,size,age,angle);
-  if(enemy){c.save();c.translate(s.x,s.y);c.rotate(angle+age*3);c.strokeStyle='#fff5df';c.lineWidth=1;c.strokeRect(-5,-5,10,10);c.restore()}
-  else if((s.vfxClass||r.hero.classId)==='archer'){c.save();c.translate(s.x,s.y);c.rotate(angle);c.fillStyle='#f0f6db';c.fillRect(-12,-1,20,2);c.beginPath();c.moveTo(13,0);c.lineTo(5,-4);c.lineTo(5,4);c.closePath();c.fill();c.restore()}
+  if(s.bossOwner)drawBossMissile(c,s,kind,angle,age);else combatStamp(c,kind,s.x,s.y,size,age,angle);
+  if(enemy&&!s.bossOwner){c.save();c.translate(s.x,s.y);c.rotate(angle+age*3);c.strokeStyle='#fff5df';c.lineWidth=1;c.strokeRect(-5,-5,10,10);c.restore()}
+  else if(!enemy&&(s.vfxClass||r.hero.classId)==='archer'){c.save();c.translate(s.x,s.y);c.rotate(angle);c.fillStyle='#f0f6db';c.fillRect(-12,-1,20,2);c.beginPath();c.moveTo(13,0);c.lineTo(5,-4);c.lineTo(5,4);c.closePath();c.fill();c.restore()}
  }
 }
 const combatSkillRecipes={
@@ -3229,15 +3380,15 @@ const combatHitBefore=hit;
 hit=function(e,...args){const hp=e.hp;combatHitBefore(e,...args);if(run&&hp>e.hp&&hp>0){addCombatFx(run,'impact',e.x,e.y-e.size*.4,{theme:args[2]?'flame':args[1]?combatSkillRecipes[run.activeSkill]?.theme||combatTheme(run):combatTheme(run),size:e.boss?36:27,life:.28});if(e.hp<=0)addCombatFx(run,'dissolve',e.x,e.y,{theme:enemyCombatTheme(e),radius:e.boss?90:38,life:.65})}};
 const combatBossReleaseBefore=releaseBossSkill;
 releaseBossSkill=function(e,r){const cast=e.bossCast,n=r.shots.length;if(!cast)return;combatBossReleaseBefore(e,r);if(e.bossCast===cast||e.hp<=0)return;const theme=enemyCombatTheme(e);for(let i=n;i<r.shots.length;i++)primeCombatShot(r,r.shots[i],theme);
- addCombatFx(r,'bossRelease',cast.origin.x,cast.origin.y,{theme,mechanic:cast.kind,radius:cast.radius||90,angle:cast.angle,life:.7,owner:e.bossSkillId});
- if(cast.kind==='summon'||cast.kind==='eclipse'||cast.kind==='blink')for(const p of cast.points)addCombatFx(r,'portal',p.x,p.y,{theme,radius:cast.kind==='blink'?45:30,life:.75,owner:e.bossSkillId});
+ addCombatFx(r,'bossRelease',cast.origin.x,cast.origin.y,{theme,mechanic:cast.kind,radius:cast.radius||90,angle:cast.angle,gap:cast.gap,life:cast.kind==='ritual'?.95:.7,owner:e.bossSkillId});
+ if(cast.kind==='summon'||cast.kind==='eclipse'||cast.kind==='blink')for(const p of cast.points)addCombatFx(r,'portal',p.x,p.y,{theme,mechanic:cast.kind,radius:cast.kind==='blink'?45:30,life:.75,owner:e.bossSkillId});
 };
 const combatFieldBefore=addBossField;
 addBossField=function(r,e,shape,geometry,damage,life){const n=r.bossFields.length;combatFieldBefore(r,e,shape,geometry,damage,life);if(r.bossFields.length>n){const f=r.bossFields.at(-1);f.vfxTheme=enemyCombatTheme(e);f.vfxMechanic=e.bossSkillLabel}}
 const combatDashBefore=tickBossDash;
-tickBossDash=function(e,r,dt){const from={x:e.x,y:e.y};combatDashBefore(e,r,dt);if(Math.hypot(e.x-from.x,e.y-from.y)>6)addCombatFx(r,'dashWake',from.x,from.y,{theme:enemyCombatTheme(e),angle:e.chargeAngle||0,size:e.size*2,life:.28,owner:e.bossSkillId})};
+tickBossDash=function(e,r,dt){const from={x:e.x,y:e.y};combatDashBefore(e,r,dt);if(Math.hypot(e.x-from.x,e.y-from.y)>2)addCombatFx(r,'bossWake',from.x,from.y,{theme:enemyCombatTheme(e),angle:e.chargeAngle||0,size:e.size*2,life:.28,owner:e.bossSkillId});if(!e.bossDash)addCombatFx(r,'bossRelease',e.x,e.y,{theme:enemyCombatTheme(e),mechanic:'chargeEnd',radius:e.size+24,angle:e.chargeAngle||0,life:.4,owner:e.bossSkillId})};
 const combatWorldBefore=updateWorld;
-updateWorld=function(r,dt){const waiting=(r.hazards||[]).filter(h=>!h.struck);combatWorldBefore(r,dt);for(const h of waiting)if(h.struck)addCombatFx(r,'eruption',h.x,h.y,{theme:['thorn','flame','frost','bolt','spirit','blood'][r.chapter-1],radius:h.radius,life:.65});const alive=new Set(r.enemies.filter(e=>e.boss&&e.hp>0).map(e=>e.bossSkillId));r.combatFx=(r.combatFx||[]).filter(f=>!f.owner||alive.has(f.owner))};
+updateWorld=function(r,dt){r.hazards=r.hazards.filter(h=>h.wardenOwner===undefined||r.enemies.some(e=>isWarden(e)&&e.hp>0&&e.stun<=0&&e.warden.id===h.wardenOwner));const waiting=(r.hazards||[]).filter(h=>!h.struck);combatWorldBefore(r,dt);for(const h of waiting)if(h.struck)addCombatFx(r,'eruption',h.x,h.y,{theme:['thorn','flame','frost','bolt','spirit','blood'][r.chapter-1],radius:h.radius,life:.65});const alive=new Set(r.enemies.filter(e=>e.boss&&e.hp>0).map(e=>e.bossSkillId));r.combatFx=(r.combatFx||[]).filter(f=>!f.owner||alive.has(f.owner))};
 const combatPackBefore=packRun;
 packRun=function(r){const data=combatPackBefore(r);delete data.state.combatFx;for(const s of data.state.shots){delete s.vfxTrail;delete s.vfxImpact;delete s.vfxCollision}return data};
 const combatSetupBefore=setupChapter;
@@ -3247,6 +3398,7 @@ function combatRune(c,x,y,radius,color,time,ellipse=false){
  for(let i=0;i<8;i++){const a=i*Math.PI/4;c.save();c.rotate(a);c.strokeRect(radius*.88-2,-2,4,4);c.beginPath();c.moveTo(radius*.5,0);c.lineTo(radius*.68,0);c.stroke();c.restore()}c.restore();
 }
 function combatBurst(c,fx){const p=Math.max(0,Math.min(1,fx.age/fx.life)),theme=fx.theme||'sun',color=combatPalette[theme],rad=fx.radius||fx.size||40,fade=1-p,count=reducedMotion?5:12;
+ if(fx.kind==='bossRelease'||fx.kind==='bossWake'||fx.kind==='portal'&&fx.owner){drawBossRelease(c,fx);return}
  c.save();c.globalAlpha*=fade;const radius=rad*(.15+Math.sin(p*Math.PI*.5)*.85);
  if(['impact','muzzle','enemyCast','dashWake'].includes(fx.kind)){combatStamp(c,fx.kind==='impact'?'impact':theme,fx.x,fx.y,(fx.size||35)*(fx.kind==='dashWake'?1:.6+p*.6),fx.age,fx.angle||0,fade);c.restore();return}
  if(fx.kind==='slash'){c.translate(fx.x,fx.y);c.rotate(fx.angle||0);c.strokeStyle=color;c.lineWidth=8*(1-p)+1;c.beginPath();c.arc(0,0,rad*(.55+.4*p),-.95+p*.2,1.05+p*.3);c.stroke();c.lineWidth=2;c.strokeStyle='#fff5df';c.beginPath();c.arc(0,0,rad*(.57+.4*p),-.8,1.1);c.stroke();c.restore();return}
@@ -3287,20 +3439,262 @@ drawEnemyMotion=function(c,e,t){t=run?.time??t;const out=combatEnemyDrawBefore(c
  if(cast){const progress=Math.max(0,Math.min(1,1-cast.left/cast.total)),y=e.y-e.size*.5;combatRune(c,e.x,e.y+12,e.size+12,color,t,true);combatStamp(c,theme,e.x,y,14+progress*(e.boss?38:20),t,Math.atan2((run?.y||e.y)-y,(run?.x||e.x)-e.x));for(let i=0;i<4;i++){const a=i*Math.PI/2+t*2,d=(1-progress)*28+10;combatStamp(c,'spark',e.x+Math.cos(a)*d,y+Math.sin(a)*d*.6,11,t+i*.1)}}
  if(e.contactWindup>0||e.chargeWindup>0){const a=e.chargeWindup>0?e.chargeAngle:Math.atan2((run?.y||e.y)-e.y,(run?.x||e.x)-e.x);c.save();c.strokeStyle=color;c.lineWidth=2;c.beginPath();c.arc(e.x,e.y-5,e.size+15,a-.75,a+.75);c.stroke();c.restore()}
  if(e.stun>0)for(let i=0;i<3;i++){const a=i*2.094+t*3;combatStamp(c,'spark',e.x+Math.cos(a)*15,e.y-(e.boss?120:55)+Math.sin(a)*5,12,t+i*.1)}return out};drawAnimatedEnemy=drawEnemyMotion;drawChapterEnemy=drawEnemyMotion;
-const combatBossGroundBefore=drawBossSkillEffects;
-drawBossSkillEffects=function(c,r,t){t=r.time||0;combatBossGroundBefore(c,r,t);for(const e of r.enemies){const cast=e.bossCast;if(!cast||e.hp<=0)continue;const color=combatPalette[enemyCombatTheme(e)],p=1-cast.left/cast.total;
-  // Keep actual hit boundaries and the ring's safe wedge unobscured.
-  for(const point of cast.points)combatRune(c,point.x,point.y,cast.kind==='summon'||cast.kind==='eclipse'?24:cast.radius*.72,color,t);
-  if(cast.kind==='ritual'){combatRune(c,e.x,e.y,cast.radius,color,t*2,true);for(let i=0;i<6;i++){const a=i*Math.PI/3+t;combatStamp(c,'heal',e.x+Math.cos(a)*45,e.y-((t*35+i*14)%85),20,t+i*.1)}}
-  for(const line of cast.lanes){const a=Math.atan2(line.y2-line.y,line.x2-line.x),n=reducedMotion?3:7;for(let i=1;i<n;i++){const q=i/n,x=line.x+(line.x2-line.x)*q,y=line.y+(line.y2-line.y)*q;c.save();c.translate(x,y);c.rotate(a);c.strokeStyle=color;c.globalAlpha=.35+p*.5;c.lineWidth=2;c.beginPath();c.moveTo(-5,-5);c.lineTo(1,0);c.lineTo(-5,5);c.stroke();c.restore()}}
- }};
-function drawCombatBossForeground(c,r){
- for(const f of r.bossFields||[]){const p=1-f.t/f.max,theme=f.vfxTheme||['thorn','flame','frost','bolt','spirit','blood'][r.chapter-1],color=combatPalette[theme];c.save();c.globalAlpha=Math.min(1,f.t/f.max*2);
-  if(f.shape==='line'){const dx=f.x2-f.x,dy=f.y2-f.y,length=Math.hypot(dx,dy),a=Math.atan2(dy,dx);c.lineCap='round';c.strokeStyle=color;c.lineWidth=f.width*.45;c.globalAlpha*=.45;c.beginPath();c.moveTo(f.x,f.y);c.lineTo(f.x2,f.y2);c.stroke();c.globalAlpha*=2;c.strokeStyle='#fff5df';c.lineWidth=3;c.beginPath();c.moveTo(f.x,f.y);for(let i=1;i<=12;i++){const q=i/12,off=i===12?0:Math.sin(i*7+p*24)*f.width*.22;c.lineTo(f.x+dx*q-Math.sin(a)*off,f.y+dy*q+Math.cos(a)*off)}c.stroke();for(let i=0;i<(reducedMotion?4:10);i++){const q=((i/10+p*2)%1);combatStamp(c,theme,f.x+dx*q,f.y+dy*q,Math.min(45,f.width*1.1),r.time+i*.07,a)}combatStamp(c,'impact',f.x2,f.y2,Math.min(65,length*.2),p)}
-  else if(f.shape==='ring'){const rad=p*f.radius;for(let i=0;i<(reducedMotion?8:20);i++){const a=i*Math.PI*2/(reducedMotion?8:20);combatStamp(c,theme,f.x+Math.cos(a)*rad,f.y+Math.sin(a)*rad,28,r.time+i*.06,a+Math.PI/2)}}
-  else{combatRune(c,f.x,f.y,f.radius,color,r.time);for(let i=0;i<(reducedMotion?4:8);i++){const a=i*Math.PI/4,d=f.radius*.6;combatStamp(c,theme,f.x+Math.cos(a)*d,f.y+Math.sin(a)*d-35*Math.sin(p*Math.PI),40,r.time+i*.09,-Math.PI/2)}}c.restore();
+// Six material palettes share the same warning language; impacts carry the identity.
+const bossMaterials={
+ thorn:{edge:'#a6ce7b',core:'#edf5c7',shade:'#263e32'},
+ flame:{edge:'#f4a35c',core:'#fff0bf',shade:'#532b28'},
+ frost:{edge:'#91c9e5',core:'#edfbff',shade:'#293e59'},
+ bolt:{edge:'#b0b9f1',core:'#f4f0ff',shade:'#34304d'},
+ spirit:{edge:'#87d6c8',core:'#e7fff4',shade:'#213d43'},
+ blood:{edge:'#e28d9e',core:'#ffe8d3',shade:'#502a3e'}
+};
+function bossMaterial(theme){return bossMaterials[theme]||bossMaterials.spirit}
+const bossMissileArt=new Map();
+function drawBossMissile(c,s,theme,angle,age){
+ if(!bossMissileArt.has(theme)){
+  const a=document.createElement('canvas');a.width=72;a.height=40;const b=a.getContext('2d'),m=bossMaterial(theme);b.translate(36,20);
+  const g=b.createRadialGradient(0,0,0,0,0,21);g.addColorStop(0,m.edge+'aa');g.addColorStop(1,m.edge+'00');b.fillStyle=g;b.fillRect(-30,-20,60,40);
+  b.fillStyle=m.shade;b.strokeStyle=m.edge;b.lineWidth=1.3;b.beginPath();
+  if(theme==='spirit'||theme==='blood'||theme==='flame'){b.moveTo(12,0);b.bezierCurveTo(7,-12,-6,-9,-20,-4);b.quadraticCurveTo(-7,-3,-17,5);b.bezierCurveTo(-3,3,7,11,12,0)}
+  else{b.moveTo(15,0);b.lineTo(-5,-7);b.lineTo(-2,-2);b.lineTo(-22,0);b.lineTo(-2,2);b.lineTo(-5,7);b.closePath()}b.fill();b.stroke();
+  b.strokeStyle=m.core;b.lineWidth=2;b.beginPath();b.moveTo(-12,0);b.lineTo(9,0);b.stroke();b.fillStyle=m.core;b.fillRect(8,-1,3,2);
+  if(theme==='thorn'||theme==='bolt'){b.lineWidth=1;b.strokeStyle=m.edge;for(const sign of [-1,1]){b.beginPath();b.moveTo(0,0);b.lineTo(-8,sign*9);b.lineTo(-13,sign*5);b.stroke()}}
+  bossMissileArt.set(theme,a);
+ }
+ c.save();c.translate(s.x,s.y);c.rotate(angle);c.drawImage(bossMissileArt.get(theme),-27,-15,54,30);c.restore();
+}
+function bossSigil(c,x,y,radius,mat,progress,kind='summon'){
+ drawBossCircle(c,{x,y},radius,mat.edge,progress);
+ c.save();c.translate(x,y);c.strokeStyle=mat.edge;c.lineWidth=1;c.beginPath();
+ for(let i=0;i<=6;i++){const a=-Math.PI/2+i*Math.PI/3,d=i%2?radius*.63:radius*.76;c.lineTo(Math.cos(a)*d,Math.sin(a)*d)}c.stroke();
+ if(kind==='blink'){c.strokeStyle=mat.core;c.beginPath();c.moveTo(0,-radius*.5);c.lineTo(radius*.3,0);c.lineTo(0,radius*.5);c.lineTo(-radius*.3,0);c.closePath();c.stroke()}c.restore();
+}
+drawBossSkillEffects=function(c,r,t){
+ t=r.time||0;c.save();
+ for(const e of r.enemies){const cast=e.bossCast;if(!e.boss||e.hp<=0||!cast)continue;
+  const mat=bossMaterial(enemyCombatTheme(e)),p=Math.max(0,Math.min(1,1-cast.left/cast.total));
+  for(const point of cast.points){const portal=['summon','eclipse'].includes(cast.kind);if(portal||cast.kind==='blink')bossSigil(c,point.x,point.y,portal?25:cast.radius,mat,p,cast.kind);else drawBossCircle(c,point,cast.radius,mat.edge,p)}
+  for(const line of cast.lanes)drawBossLane(c,line,mat.edge,p);
+  if(['ring','eclipse','nova','ritual'].includes(cast.kind)){
+   const ring=cast.kind==='ring'||cast.kind==='eclipse',rad=ring?78:cast.radius;
+   if(!ring){bossSigil(c,cast.origin.x,cast.origin.y,rad,mat,p,cast.kind)}
+   else{
+    // Both rails and every ornament stop at the safe wedge.
+    const start=cast.gap+.43,end=cast.gap+Math.PI*2-.43;
+    bossStroke(c,mat.edge,2,()=>c.arc(cast.origin.x,cast.origin.y,rad,start,end));
+    bossStroke(c,mat.core,1.5,()=>c.arc(cast.origin.x,cast.origin.y,rad-7,start,start+(end-start)*p));
+    for(const a of [start,end])bossStroke(c,mat.core,1,()=>{c.moveTo(cast.origin.x+Math.cos(a)*25,cast.origin.y+Math.sin(a)*25);c.lineTo(cast.origin.x+Math.cos(a)*(rad+9),cast.origin.y+Math.sin(a)*(rad+9))});
+   }
+  }
+  if(cast.kind==='fan'){const spread=.55+bossProfile(e).tier*.06;for(const off of [-spread,0,spread]){const end=bossLaneEnd(r,cast.origin.x,cast.origin.y,cast.angle+off,240,5);drawBossLane(c,{...cast.origin,x2:end.x,y2:end.y,width:6},mat.edge,p)}}
+ }
+ // Active ground volumes retain the exact collision radius/width for their full lifetime.
+ for(const f of r.bossFields||[]){const mat=bossMaterial(f.vfxTheme||enemyCombatTheme({chapter:r.chapter})),p=1-f.t/f.max;
+  c.save();c.globalAlpha*=Math.min(1,f.t/.12);
+  if(f.shape==='line')drawBossLane(c,f,mat.edge,1,true);
+  else if(f.shape==='ring'){bossStroke(c,mat.edge,f.thickness||20,()=>c.arc(f.x,f.y,Math.max(.1,p*f.radius),0,Math.PI*2));bossStroke(c,mat.core,1.5,()=>c.arc(f.x,f.y,Math.max(.1,p*f.radius),0,Math.PI*2))}
+  else{c.fillStyle=mat.shade+'b0';c.beginPath();c.arc(f.x,f.y,f.radius,0,Math.PI*2);c.fill();bossStroke(c,mat.edge,2,()=>c.arc(f.x,f.y,f.radius,0,Math.PI*2))}c.restore();
+ }c.restore();
+};
+// Deterministic, faceted material fragments avoid tiled sprite wreaths and random flicker.
+function bossFragment(c,theme,x,y,size,angle,alpha=1){
+ const m=bossMaterial(theme);c.save();c.translate(x,y);c.rotate(angle);c.globalAlpha*=alpha;
+ const body=c.createLinearGradient(-size*.3,0,size*.3,-size);body.addColorStop(0,m.shade);body.addColorStop(.55,m.edge+'bb');body.addColorStop(1,m.core);
+ c.fillStyle=body;c.strokeStyle=m.edge;c.lineWidth=.8;
+ c.beginPath();
+ if(theme==='thorn'){c.moveTo(-size*.24,2);c.quadraticCurveTo(size*.12,-size*.4,0,-size);c.lineTo(size*.3,-size*.44);c.lineTo(size*.24,2)}
+ else if(theme==='flame'){c.moveTo(-size*.3,0);c.quadraticCurveTo(-size*.55,-size*.5,0,-size);c.quadraticCurveTo(-size*.08,-size*.5,size*.26,-size*.55);c.quadraticCurveTo(size*.5,-size*.14,size*.2,0)}
+ else{c.moveTo(0,-size);c.lineTo(size*.27,-size*.3);c.lineTo(size*.18,2);c.lineTo(-size*.2,0);c.lineTo(-size*.3,-size*.4)}
+ c.closePath();c.fill();c.stroke();
+ c.fillStyle=m.shade+'a0';c.beginPath();c.moveTo(0,-size*.85);c.lineTo(size*.21,-size*.3);c.lineTo(size*.16,0);c.lineTo(0,0);c.closePath();c.fill();
+ c.strokeStyle=m.core;c.lineWidth=.8;c.beginPath();c.moveTo(0,-size*.12);c.lineTo(0,-size*.72);c.stroke();c.restore();
+}
+function drawBossRelease(c,fx){
+ const p=Math.max(0,Math.min(1,fx.age/fx.life)),m=bossMaterial(fx.theme),portal=fx.kind==='portal',rad=portal?fx.radius:Math.min(58,fx.radius*.45),n=reducedMotion?4:8,kind=fx.mechanic;
+ c.save();c.globalAlpha*=Math.pow(1-p,1.2);c.lineCap='round';
+ if(fx.kind==='bossWake'){
+  c.translate(fx.x,fx.y);c.rotate(fx.angle);const width=(fx.size||50)*.45;
+  for(const side of [-1,1]){c.beginPath();c.moveTo(12,side*width);c.bezierCurveTo(-8,side*width,-30-p*40,side*width*.4,-40-p*45,0);c.strokeStyle=m.edge+'60';c.lineWidth=5;c.stroke();c.strokeStyle=m.core;c.lineWidth=1;c.stroke()}
+  for(let i=0;i<3;i++)bossFragment(c,fx.theme,-p*25-i*9,(i-1)*width*.6,(8+i*3)*(1-p),-Math.PI/2,.7);
+  c.restore();return;
+ }
+ if(portal){
+  const h=Math.sin(Math.PI*Math.max(.02,p))*75;
+  bossGlow(c,fx.x,fx.y-h*.6,rad,h+12,m,.7);
+  c.fillStyle='#0b1720e8';c.strokeStyle=m.edge;c.lineWidth=2;c.beginPath();c.ellipse(fx.x,fx.y-h*.6,rad*.5,h+2,0,0,Math.PI*2);c.fill();c.stroke();
+  c.strokeStyle=m.core;c.lineWidth=1;c.beginPath();c.ellipse(fx.x,fx.y-h*.6,rad*.36,h*.88+1,0,-Math.PI*.45,Math.PI*1.4);c.stroke();
+  for(const side of [-1,1]){const art=bossEruptionSprite(fx.theme,side+1);c.drawImage(art,fx.x+side*rad*.8-rad*.3,fx.y-h*.95,rad*.6,h)}
+  bossCrest(c,fx.x,fx.y-h*.65,rad*.4,m,p,fx.mechanic==='blink'?'blink':'summon');
+  c.strokeStyle=m.edge;c.beginPath();c.ellipse(fx.x,fx.y,rad,rad*.45,0,0,Math.PI*2);c.stroke();
+ }else if(kind==='ritual'){
+  bossRitual(c,fx.x,fx.y,65,m,1,p);c.restore();return;
+ }else if(kind==='ring'||kind==='eclipse'){
+  const start=(fx.gap||0)+.43,end=(fx.gap||0)+Math.PI*2-.43,radius=38+p*65;
+  if(kind==='eclipse'){bossGlow(c,fx.x,fx.y-35,50,60,m,.7);c.fillStyle='#10121ee0';c.strokeStyle=m.edge;c.lineWidth=2;c.beginPath();c.arc(fx.x,fx.y-35,22+Math.sin(p*Math.PI)*8,0,Math.PI*2);c.fill();c.stroke()}
+  for(const [w,a] of [[8,.15],[3,.5],[1,1]]){c.save();c.globalAlpha*=a;c.strokeStyle=m.core;c.lineWidth=w;c.beginPath();c.arc(fx.x,fx.y,radius,start,end);c.stroke();c.restore()}
+  for(let i=0;i<n;i++){const a=start+(end-start)*(i+.5)/n;bossFragment(c,fx.theme,fx.x+Math.cos(a)*radius,fx.y+Math.sin(a)*radius,17+8*Math.sin(p*Math.PI),a+Math.PI/2)}
+  c.restore();return;
+ }else if(['charge','fan','beam','lanes'].includes(kind)){
+  c.translate(fx.x,fx.y);c.rotate(fx.angle||0);
+  const spread=kind==='lanes'?.6:kind==='fan'?.45:0,count=spread?3:1;
+  for(let i=0;i<count;i++){c.save();c.rotate((i-(count-1)/2)*spread);const reach=24+p*68;
+   bossGlow(c,15,0,35,25,m,.6);c.strokeStyle=m.edge;c.lineWidth=3;c.beginPath();c.ellipse(10+p*22,0,10,22+14*p,0,-1.2,1.2);c.stroke();
+   for(const side of [-1,1]){c.strokeStyle=m.core;c.lineWidth=1;c.beginPath();c.moveTo(5,side*14);c.quadraticCurveTo(reach*.4,side*25,reach,side*4);c.stroke();bossFragment(c,fx.theme,reach*.55,side*10,22,-Math.PI/2)}c.restore();
+  }c.restore();return;
+ }else if(kind==='blink'){
+  const radius=rad*(1-p);bossGlow(c,fx.x,fx.y-25,rad,rad*1.5,m,.5);
+  c.strokeStyle=m.edge;c.lineWidth=2;c.beginPath();c.ellipse(fx.x,fx.y-25,radius*.6,radius+1,0,0,Math.PI*2);c.stroke();
+  for(let i=0;i<n;i++){const a=i*Math.PI*2/n;bossFragment(c,fx.theme,fx.x+Math.cos(a)*radius,fx.y-25+Math.sin(a)*radius,12*(1-p),a)}c.restore();return;
+ }else if(kind==='summon'){
+  bossCrest(c,fx.x,fx.y-65,28,m,p,'summon');bossGlow(c,fx.x,fx.y-35,45,65,m,.6);
+ }else{
+  // Slams, barrages, nova and rush endings get a brief grounded pressure crown.
+  const radius=rad*(.4+p);bossGlow(c,fx.x,fx.y,rad*1.5,rad*.65,m,.6);
+  c.strokeStyle=m.edge;c.lineWidth=2;c.beginPath();c.ellipse(fx.x,fx.y,radius,radius*.45,0,0,Math.PI*2);c.stroke();
+  for(let i=0;i<n;i++){const a=i*Math.PI*2/n;bossFragment(c,fx.theme,fx.x+Math.cos(a)*radius,fx.y+Math.sin(a)*radius*.45,(kind==='nova'?28:18)*(1-p*.5),a*.3)}
+ }
+ for(let i=0;i<n;i++){const a=i*Math.PI*2/n,d=rad*(.3+p*.9),x=fx.x+Math.cos(a)*d,y=fx.y+Math.sin(a)*d*.45-p*18;bossFragment(c,fx.theme,x,y,(8+i%3*4)*(1-p*.5),Math.sin(i*3)*.6,.8)}
+ c.restore();
+}
+function bossCrest(c,x,y,radius,m,progress,kind){
+ c.save();c.translate(x,y);c.strokeStyle=m.edge;c.lineWidth=1.2;
+ c.beginPath();c.arc(0,0,radius,0,Math.PI*2);c.stroke();
+ c.beginPath();c.arc(0,0,radius*.8,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.max(.01,progress));c.stroke();
+ c.strokeStyle=m.core;c.beginPath();
+ if(kind==='ritual'){c.moveTo(-radius*.4,0);c.lineTo(radius*.4,0);c.moveTo(0,-radius*.4);c.lineTo(0,radius*.4)}
+ else{for(let i=0;i<=4;i++){const a=i*Math.PI/2-Math.PI/2;c.lineTo(Math.cos(a)*radius*.55,Math.sin(a)*radius*.55)}}c.stroke();
+ for(let i=0;i<4;i++){const a=i*Math.PI/2;c.beginPath();c.moveTo(Math.cos(a)*radius*.9,Math.sin(a)*radius*.9);c.lineTo(Math.cos(a)*radius*1.2,Math.sin(a)*radius*1.2);c.stroke()}c.restore();
+}
+function bossRitual(c,x,y,radius,m,progress,age=0){
+ c.save();bossGlow(c,x,y-30,radius,radius*1.2,m,.25+progress*.3);
+ for(const side of [-1,1]){c.strokeStyle=m.edge;c.lineWidth=2;c.beginPath();c.moveTo(x+side*radius*.7,y);c.bezierCurveTo(x-side*radius*.6,y-25,x+side*radius*.65,y-55,x,y-90-progress*20);c.stroke();c.strokeStyle=m.core;c.lineWidth=.7;c.stroke()}
+ bossCrest(c,x,y-90-progress*20,17+progress*8,m,progress,'ritual');
+ for(let i=0;i<(reducedMotion?3:7);i++){const q=(i/7+age*.7)%1,a=i*2.4,d=radius*.65*(1-q);c.fillStyle=m.core;c.fillRect(x+Math.cos(a)*d,y-q*80+Math.sin(a)*d*.35,2,3)}c.restore();
+}
+// Bake material silhouettes once. Branches have lit faces and dark cores, so they
+// retain volume at game resolution without a full-screen blur on every frame.
+const bossEruptionArt=new Map();
+function bossEruptionSprite(theme,variant=0){
+ const key=theme+variant;if(bossEruptionArt.has(key))return bossEruptionArt.get(key);
+ const art=document.createElement('canvas');art.width=160;art.height=192;
+ const c=art.getContext('2d'),m=bossMaterial(theme);c.translate(80,176);
+ const fill=c.createLinearGradient(-40,0,32,-145);fill.addColorStop(0,m.shade);fill.addColorStop(.44,'#17242b');fill.addColorStop(.68,theme==='thorn'?'#526a40':m.edge+'b0');fill.addColorStop(.78,m.shade);fill.addColorStop(1,m.edge);
+ function limb(x,y,tx,ty,w,bend){
+  c.beginPath();c.moveTo(x-w,y);c.bezierCurveTo(x+bend-w,y+(ty-y)*.35,tx-w*.4,ty+20,tx,ty);c.bezierCurveTo(tx+w*.7,ty+32,x+bend+w,y+(ty-y)*.5,x+w,y);c.closePath();
+  c.fillStyle=fill;c.fill();c.strokeStyle=m.edge+'b0';c.lineWidth=.9;c.stroke();
+  c.beginPath();c.moveTo(x+w*.2,y-2);c.bezierCurveTo(x+bend+w*.3,y+(ty-y)*.4,tx,ty+26,tx,ty+5);c.strokeStyle=m.core;c.lineWidth=1.1;c.stroke();
+ }
+ if(theme==='thorn'){
+  for(let i=0;i<3;i++){const side=i===0?-1:1,x=(i-1)*22,h=i===1?164:112+variant*10,tip=x+side*(i===1?8:29);limb(x,0,tip,-h,i===1?23:16,side*16);
+   for(let j=0;j<2;j++){const y=-31-j*30,root=x+side*j*5;limb(root,y,root+side*(30+j*6),y-33-j*5,6,side*7)}
+  }
+ }else if(theme==='flame'||theme==='spirit'||theme==='blood'){
+  for(let i=0;i<7;i++){const x=(i-3)*10,h=70+(i*37+variant*23)%90,side=i%2?1:-1;limb(x,0,x+side*18,-h,theme==='spirit'?5:10,side*28)}
+ }else if(theme==='frost'){
+  for(let i=0;i<7;i++){const x=(i-3)*12,h=62+(i*31+variant*19)%95,w=8+i%3*3,lean=(i-3)*7;
+   c.fillStyle=fill;c.beginPath();c.moveTo(x-w,0);c.lineTo(x+lean-w*.7,-h*.7);c.lineTo(x+lean,-h);c.lineTo(x+lean+w,-h*.72);c.lineTo(x+w,0);c.closePath();c.fill();c.strokeStyle=m.edge;c.stroke();
+   c.fillStyle=m.core+'88';c.beginPath();c.moveTo(x+lean,-h);c.lineTo(x+lean+w,-h*.72);c.lineTo(x+w,0);c.lineTo(x+2,-8);c.closePath();c.fill();
+  }
+ }else{
+  for(let i=0;i<5;i++){const x=(i-2)*19;c.beginPath();c.moveTo(x,0);for(let j=1;j<=6;j++)c.lineTo(x+Math.sin(i*8+j*5+variant)*20,-j*25);c.strokeStyle=m.edge+'70';c.lineWidth=9;c.stroke();c.strokeStyle=m.edge;c.lineWidth=3;c.stroke();c.strokeStyle=m.core;c.lineWidth=1;c.stroke()}
+ }
+ // Bark scoring / energy veins follow the silhouette rather than a repeating icon.
+ c.globalCompositeOperation='source-atop';c.strokeStyle=m.core+'88';c.lineWidth=.7;
+ for(let i=0;i<10;i++){const x=Math.sin(i*7.3+variant)*58,y=-12-(i*19)%135;c.beginPath();c.moveTo(x,y);c.lineTo(x+5,y-9);c.lineTo(x+1,y-18);c.lineTo(x+8,y-29);c.stroke()}
+ c.globalCompositeOperation='source-over';bossEruptionArt.set(key,art);return art;
+}
+function bossGlow(c,x,y,rx,ry,m,strength){
+ c.save();c.translate(x,y);c.scale(1,ry/rx);c.globalCompositeOperation='lighter';c.globalAlpha*=strength;
+ const g=c.createRadialGradient(0,0,1,0,0,rx);g.addColorStop(0,m.core+'bc');g.addColorStop(.28,m.edge+'70');g.addColorStop(1,m.edge+'00');c.fillStyle=g;c.fillRect(-rx,-rx,rx*2,rx*2);c.restore();
+}
+function bossEruption(c,x,y,radius,theme,p,seed=0){
+ const m=bossMaterial(theme),rise=1-Math.pow(1-Math.min(1,p/.28),3),fall=1-Math.max(0,(p-.62)/.38),height=(90+radius*.9)*rise*(.75+fall*.25),width=radius*2.05;
+ if(height<.1)return;
+ bossGlow(c,x,y,radius*1.65,radius*.8,m,(1-p)*.7);
+ if(!reducedMotion)bossGlow(c,x,y-height*.35,radius*.45,height*.65,m,Math.max(0,1-p*2)*.55);
+ // Ground tendrils break the perfect disc with irregular branching fissures.
+ c.save();c.lineCap='round';
+ for(let i=0;i<(reducedMotion?5:9);i++){const a=i*2.399+seed,reach=radius*(.55+(i%3)*.13);c.beginPath();c.moveTo(x,y);for(let j=1;j<5;j++){const d=reach*j/4,off=Math.sin(i*8+j*4)*5;c.lineTo(x+Math.cos(a)*d-Math.sin(a)*off,y+Math.sin(a)*d+Math.cos(a)*off)}c.strokeStyle=m.edge+'77';c.lineWidth=5*(1-p)+1;c.stroke();c.strokeStyle=m.core;c.lineWidth=.8;c.stroke()}
+ // Rear growth, central crown, and near growth make one eruption read as a mass.
+ for(const layer of [-1,0]){
+  const sx=x+layer*radius*.35,sy=y+(layer===0?0:7),scale=layer===0?1:.7;
+  c.globalAlpha*=layer===0?1:.82;
+  const art=bossEruptionSprite(theme,(seed+layer+3)%3);c.drawImage(art,sx-width*scale/2,sy-height*scale*.92,width*scale,height*scale);
+  if(layer!==0)c.globalAlpha/=.82;
+ }
+ // Ballistic debris has a rise and fall, with a quiet ground shadow underneath.
+ const count=reducedMotion?4:12;
+ for(let i=0;i<count;i++){const a=i*2.4+seed,d=radius*(.3+p*.75),dx=Math.cos(a)*d,dy=Math.sin(a)*d*.55,lift=Math.sin(p*Math.PI)*(18+(i%4)*11),s=2+i%3;
+  c.globalAlpha*=.8;c.fillStyle='#07121980';c.beginPath();c.ellipse(x+dx,y+dy,s*1.5,1,0,0,Math.PI*2);c.fill();c.globalAlpha/=.8;
+  c.save();c.translate(x+dx,y+dy-lift);c.rotate(i+p*2);c.fillStyle=m.shade;c.strokeStyle=m.edge;c.lineWidth=.7;c.beginPath();c.moveTo(-s,-s);c.lineTo(s,-s*.5);c.lineTo(s*.6,s);c.lineTo(-s*.8,s*.6);c.closePath();c.fill();c.stroke();c.restore();
+ }
+ c.globalCompositeOperation='lighter';c.strokeStyle=m.core;c.lineWidth=1.2;c.beginPath();c.ellipse(x,y,radius*.94,radius*.57,0,0,Math.PI*2);c.stroke();c.restore();
+}
+function bossGathering(c,r){
+ for(const e of r.enemies){const cast=e.bossCast;if(!e.boss||e.hp<=0||!cast)continue;
+  const p=Math.max(0,Math.min(1,1-cast.left/cast.total)),m=bossMaterial(enemyCombatTheme(e));
+  const points=cast.points.length?cast.points:[cast.origin];
+  c.save();c.globalAlpha*=.25+p*.5;
+  for(const point of points){const rad=['summon','eclipse'].includes(cast.kind)?25:Math.min(55,cast.radius);
+   bossGlow(c,point.x,point.y,rad*1.2,rad*.5,m,p*.45);
+   for(let i=0;i<(reducedMotion?3:7);i++){const a=i*2.4+(reducedMotion?0:p*1.2),d=rad*(.3+(i%3)*.25),x=point.x+Math.cos(a)*d,y=point.y+Math.sin(a)*d*.5,h=(12+i%3*9)*p;
+    c.strokeStyle=m.edge+'55';c.lineWidth=1;c.beginPath();c.moveTo(x,y);c.lineTo(x,y-h);c.stroke();c.fillStyle=m.core;c.fillRect(Math.round(x),Math.round(y-h),1,2);
+   }
+  }
+  // Crown-like charge halo stays behind the boss's face and weapon.
+  const y=e.y-e.size*.6;c.strokeStyle=m.edge;c.lineWidth=1;c.beginPath();c.ellipse(e.x,y,18+p*13,32+p*18,cast.angle,Math.PI*.15,Math.PI*1.85);c.stroke();
+  if(cast.kind==='ritual'){
+   bossRitual(c,e.x,e.y,cast.radius,m,p,p);
+   c.font='11px Georgia';c.textAlign='center';c.fillStyle='#0b1720dd';c.fillRect(e.x-53,e.y+cast.radius+5,106,19);c.fillStyle=m.core;c.fillText('Interrupt the ritual',e.x,e.y+cast.radius+18);
+  }else if(cast.kind==='summon'||cast.kind==='eclipse'){
+   for(const point of cast.points){bossCrest(c,point.x,point.y-18-p*26,12+p*7,m,p,'summon');for(const side of [-1,1]){c.strokeStyle=m.edge+'80';c.beginPath();c.moveTo(point.x+side*20,point.y);c.quadraticCurveTo(point.x+side*25,point.y-30,point.x+side*8,point.y-40-p*18);c.stroke()}}
+  }
+  if(cast.kind==='ring'||cast.kind==='eclipse'||cast.kind==='nova'){
+   const ring=cast.kind!=='nova',start=ring?cast.gap+.43:0,end=ring?cast.gap+Math.PI*2-.43:Math.PI*2,rad=ring?78:cast.radius;
+   for(let i=0;i<(reducedMotion?4:8);i++){const a=start+(end-start)*(i+.5)/(reducedMotion?4:8);bossFragment(c,enemyCombatTheme(e),cast.origin.x+Math.cos(a)*rad,cast.origin.y+Math.sin(a)*rad,5+p*13,a+Math.PI/2,.7)}
+  }
+  if(['charge','fan','beam','lanes'].includes(cast.kind)){
+   const focus={x:e.x+Math.cos(cast.angle)*(e.size+12),y:e.y+Math.sin(cast.angle)*(e.size+12)};
+   bossCrest(c,focus.x,focus.y-15,9+p*12,m,p,'blink');
+   for(const side of [-1,1]){const a=cast.angle+side*.65;c.strokeStyle=m.edge;c.beginPath();c.moveTo(e.x+Math.cos(a)*25,e.y+Math.sin(a)*25);c.quadraticCurveTo(focus.x+Math.cos(a)*20,focus.y+Math.sin(a)*20,focus.x,focus.y-15);c.stroke()}
+  }
+  c.restore();
  }
 }
+function bossRushAura(c,r){
+ for(const e of r.enemies){if(!e.bossDash||!e.boss||e.hp<=0)continue;const m=bossMaterial(enemyCombatTheme(e)),a=e.chargeAngle||0,rad=e.size+12;
+  c.save();bossGlow(c,e.x,e.y,rad*1.2,rad*.7,m,.5);
+  for(const side of [-1,1]){c.beginPath();c.arc(e.x,e.y,rad,a+side*.3,a+side*1.1,side<0);c.strokeStyle=m.edge+'55';c.lineWidth=7;c.stroke();c.strokeStyle=m.core;c.lineWidth=1.3;c.stroke();const angle=a+side*.5;bossFragment(c,enemyCombatTheme(e),e.x+Math.cos(angle)*rad,e.y+Math.sin(angle)*rad,27,angle+Math.PI/2)}
+  c.restore();
+ }
+}
+function drawCombatBossForeground(c,r){
+ bossGathering(c,r);bossRushAura(c,r);
+ for(const f of r.bossFields||[]){const p=Math.max(0,Math.min(1,1-f.t/f.max)),theme=f.vfxTheme||enemyCombatTheme({chapter:r.chapter}),m=bossMaterial(theme),fade=Math.min(1,f.t/.18),lift=Math.sin(Math.min(1,p*1.8)*Math.PI/2);
+  c.save();c.globalAlpha*=fade;
+  if(f.shape==='line'){
+   const dx=f.x2-f.x,dy=f.y2-f.y,a=Math.atan2(dy,dx),n=Math.min(14,Math.ceil(Math.hypot(dx,dy)/27));
+   // A hot central stream and material plumes distinguish release from the tell.
+   c.save();c.globalCompositeOperation='lighter';c.lineCap='round';
+   for(const [width,alpha] of [[f.width*.7,.12],[f.width*.3,.25],[2,.85]]){c.strokeStyle=m.core;c.lineWidth=width;c.globalAlpha=fade*alpha;c.beginPath();c.moveTo(f.x,f.y);c.lineTo(f.x2,f.y2);c.stroke()}c.restore();
+   c.save();c.translate(f.x,f.y);c.rotate(a);c.strokeStyle=m.core;c.lineWidth=1.5;c.beginPath();c.moveTo(0,0);
+   for(let i=1;i<=n;i++)c.lineTo(Math.hypot(dx,dy)*i/n,i===n?0:Math.sin(i*8.2)*f.width*.2);c.stroke();c.restore();
+   for(let i=1;i<n;i++){const q=i/n;if(theme==='bolt'){c.fillStyle=m.core;c.fillRect(f.x+dx*q-1,f.y+dy*q-3,2,6)}else bossFragment(c,theme,f.x+dx*q,f.y+dy*q,12+lift*19+Math.sin(i*3)*5,theme==='thorn'?Math.sin(i*2)*.4:a+Math.PI/2,.8)}
+   if(theme!=='bolt')for(let i=1;i<4;i++){const q=i/4,h=(32+f.width)*lift,art=bossEruptionSprite(theme,i%3);c.globalAlpha*=.8;c.drawImage(art,f.x+dx*q-f.width*.55,f.y+dy*q-h*.9,f.width*1.1,h);c.globalAlpha/=.8}
+  }else if(f.shape==='ring'){
+   const rad=p*f.radius,n=reducedMotion?8:16;
+   // The moving edge carries the energy. The interior remains visually quiet.
+   for(const [width,alpha] of [[(f.thickness||20)*1.1,.12],[5,.3],[1,.8]]){c.save();c.globalCompositeOperation='lighter';c.globalAlpha*=alpha;c.strokeStyle=m.core;c.lineWidth=width;c.beginPath();c.arc(f.x,f.y,Math.max(.1,rad),0,Math.PI*2);c.stroke();c.restore()}
+   for(let i=0;i<n;i++){const a=i*Math.PI*2/n,x=f.x+Math.cos(a)*rad,y=f.y+Math.sin(a)*rad;
+    bossFragment(c,theme,x,y,13+(1-p)*18,a+Math.PI/2,.8);
+    if(i%2===0&&rad>12){const art=bossEruptionSprite(theme,i%3),h=16+(1-p)*26;c.globalAlpha*=.65;c.drawImage(art,x-10,y-h*.9,20,h);c.globalAlpha/=.65}
+   }
+  }else bossEruption(c,f.x,f.y,f.radius,theme,p,Math.abs(Math.round(f.x+f.y))%3);
+  // Small rising debris, with no frame-dependent randomness or persistent allocations.
+  for(let i=0;i<(reducedMotion?2:5);i++){const a=i*2.4,d=(f.radius||f.width||30)*.45,x=f.x+Math.cos(a)*d,y=f.y+Math.sin(a)*d-p*35;c.fillStyle=i%2?m.edge:m.core;c.globalAlpha=fade*(1-p)*.8;c.fillRect(Math.round(x),Math.round(y),i%2?2:1,2)}c.restore();
+ }
+}
+
 
 const weaponAttackAdditions={"attackv3_fists":{"weapon":"fists","hero":"rook","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.48,"skillDuration":0.96,"completeBody":true,"source":"brawler-source.png","points":[{"muzzle":[62.288065843621396,-58.748971193415635],"footX":25,"footY":249},{"muzzle":[65.65020576131687,-21.588477366255145],"footX":19.5,"footY":243},{"muzzle":[64.05761316872427,-49.901234567901234],"footX":19,"footY":243},{"muzzle":[65.65020576131687,-56.62551440329218],"footX":20.5,"footY":232},{"muzzle":[67.06584362139918,-63.7037037037037],"footX":106.5,"footY":235},{"muzzle":[76.44444444444444,-56.27160493827161],"footX":21,"footY":230},{"muzzle":[59.2798353909465,-54.8559670781893],"footX":19.5,"footY":238},{"muzzle":[57.15637860082305,-58.39506172839506],"footX":24.5,"footY":248}],"registration":{"scale":0.35390946502057613,"poses":[{"sx":0,"sy":0,"sw":210,"sh":253,"minX":0,"minY":0,"maxX":209,"maxY":252,"footX":25,"footY":249,"tipX":201,"tipY":83,"sourceX":23,"sourceY":25},{"sx":0,"sy":0,"sw":239,"sh":248,"minX":0,"minY":0,"maxX":238,"maxY":247,"footX":19.5,"footY":243,"tipX":205,"tipY":182,"sourceX":241,"sourceY":31},{"sx":0,"sy":0,"sw":231,"sh":247,"minX":0,"minY":0,"maxX":230,"maxY":246,"footX":19,"footY":243,"tipX":200,"tipY":102,"sourceX":496,"sourceY":32},{"sx":0,"sy":0,"sw":227,"sh":236,"minX":0,"minY":0,"maxX":226,"maxY":235,"footX":20.5,"footY":232,"tipX":206,"tipY":72,"sourceX":738,"sourceY":43},{"sx":0,"sy":0,"sw":301,"sh":240,"minX":0,"minY":0,"maxX":300,"maxY":239,"footX":106.5,"footY":235,"tipX":296,"tipY":55,"sourceX":976,"sourceY":39},{"sx":0,"sy":0,"sw":242,"sh":234,"minX":0,"minY":0,"maxX":241,"maxY":233,"footX":21,"footY":230,"tipX":237,"tipY":71,"sourceX":1239,"sourceY":45},{"sx":0,"sy":0,"sw":195,"sh":243,"minX":0,"minY":0,"maxX":194,"maxY":242,"footX":19.5,"footY":238,"tipX":187,"tipY":83,"sourceX":1476,"sourceY":36},{"sx":0,"sy":0,"sw":202,"sh":253,"minX":0,"minY":0,"maxX":201,"maxY":252,"footX":24.5,"footY":248,"tipX":186,"tipY":83,"sourceX":1675,"sourceY":26}]}},"attackv3_thunder":{"weapon":"thunder","hero":"rook","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.48,"skillDuration":0.96,"completeBody":true,"source":"brawler-source.png","points":[{"muzzle":[61.58024691358025,-61.934156378600825],"footX":25,"footY":250},{"muzzle":[65.29629629629629,-23.004115226337447],"footX":19.5,"footY":243},{"muzzle":[63.7037037037037,-21.588477366255145],"footX":20,"footY":243},{"muzzle":[64.41152263374485,-58.748971193415635],"footX":21,"footY":232},{"muzzle":[94.49382716049382,-58.748971193415635],"footX":22,"footY":236},{"muzzle":[73.96707818930041,-57.333333333333336],"footX":20,"footY":230},{"muzzle":[59.10288065843621,-56.62551440329218],"footX":20,"footY":238},{"muzzle":[55.38683127572016,-61.934156378600825],"footX":25.5,"footY":249}],"registration":{"scale":0.35390946502057613,"poses":[{"sx":0,"sy":0,"sw":215,"sh":254,"minX":0,"minY":0,"maxX":214,"maxY":253,"footX":25,"footY":250,"tipX":199,"tipY":75,"sourceX":23,"sourceY":303},{"sx":0,"sy":0,"sw":238,"sh":247,"minX":0,"minY":0,"maxX":237,"maxY":246,"footX":19.5,"footY":243,"tipX":204,"tipY":178,"sourceX":241,"sourceY":310},{"sx":0,"sy":0,"sw":231,"sh":246,"minX":0,"minY":0,"maxX":230,"maxY":245,"footX":20,"footY":243,"tipX":200,"tipY":182,"sourceX":496,"sourceY":311},{"sx":0,"sy":0,"sw":227,"sh":235,"minX":0,"minY":0,"maxX":226,"maxY":234,"footX":21,"footY":232,"tipX":203,"tipY":66,"sourceX":738,"sourceY":322},{"sx":0,"sy":0,"sw":309,"sh":239,"minX":0,"minY":0,"maxX":308,"maxY":238,"footX":22,"footY":236,"tipX":289,"tipY":70,"sourceX":976,"sourceY":318},{"sx":0,"sy":0,"sw":248,"sh":233,"minX":0,"minY":0,"maxX":247,"maxY":232,"footX":20,"footY":230,"tipX":229,"tipY":68,"sourceX":1239,"sourceY":324},{"sx":0,"sy":0,"sw":200,"sh":242,"minX":0,"minY":0,"maxX":199,"maxY":241,"footX":20,"footY":238,"tipX":187,"tipY":78,"sourceX":1476,"sourceY":315},{"sx":0,"sy":0,"sw":201,"sh":253,"minX":0,"minY":0,"maxX":200,"maxY":252,"footX":25.5,"footY":249,"tipX":182,"tipY":74,"sourceX":1675,"sourceY":304}]}},"attackv3_titan":{"weapon":"titan","hero":"rook","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.48,"skillDuration":0.96,"completeBody":true,"source":"brawler-source.png","points":[{"muzzle":[63.789256198347104,-59.70247933884297],"footX":26.5,"footY":249},{"muzzle":[67.69834710743801,-55.438016528925615],"footX":19.5,"footY":242},{"muzzle":[64.32231404958678,-50.107438016528924],"footX":19,"footY":245},{"muzzle":[66.8099173553719,-54.37190082644628],"footX":22,"footY":235},{"muzzle":[100.21487603305785,-64.32231404958678],"footX":20,"footY":236},{"muzzle":[79.9586776859504,-60.05785123966942],"footX":18,"footY":231},{"muzzle":[62.01239669421487,-54.72727272727273],"footX":19.5,"footY":238},{"muzzle":[60.05785123966942,-57.925619834710744],"footX":24,"footY":249}],"registration":{"scale":0.35537190082644626,"poses":[{"sx":0,"sy":0,"sw":211,"sh":253,"minX":0,"minY":0,"maxX":210,"maxY":252,"footX":26.5,"footY":249,"tipX":206,"tipY":81,"sourceX":23,"sourceY":583},{"sx":0,"sy":0,"sw":239,"sh":247,"minX":0,"minY":0,"maxX":238,"maxY":246,"footX":19.5,"footY":242,"tipX":210,"tipY":86,"sourceX":241,"sourceY":589},{"sx":0,"sy":0,"sw":231,"sh":247,"minX":0,"minY":0,"maxX":230,"maxY":246,"footX":19,"footY":245,"tipX":200,"tipY":104,"sourceX":496,"sourceY":589},{"sx":0,"sy":0,"sw":227,"sh":237,"minX":0,"minY":0,"maxX":226,"maxY":236,"footX":22,"footY":235,"tipX":210,"tipY":82,"sourceX":738,"sourceY":599},{"sx":0,"sy":0,"sw":310,"sh":239,"minX":0,"minY":0,"maxX":309,"maxY":238,"footX":20,"footY":236,"tipX":302,"tipY":55,"sourceX":976,"sourceY":597},{"sx":0,"sy":0,"sw":247,"sh":233,"minX":0,"minY":0,"maxX":246,"maxY":232,"footX":18,"footY":231,"tipX":243,"tipY":62,"sourceX":1239,"sourceY":603},{"sx":0,"sy":0,"sw":198,"sh":242,"minX":0,"minY":0,"maxX":197,"maxY":241,"footX":19.5,"footY":238,"tipX":194,"tipY":84,"sourceX":1476,"sourceY":594},{"sx":0,"sy":0,"sw":202,"sh":253,"minX":0,"minY":0,"maxX":201,"maxY":252,"footX":24,"footY":249,"tipX":193,"tipY":86,"sourceX":1675,"sourceY":583}]}},"attackv3_wand":{"weapon":"wand","hero":"orin","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.58,"skillDuration":0.96,"completeBody":true,"source":"mage-source.png","points":[{"muzzle":[64.56521739130434,-60.26086956521739],"footX":30,"footY":232},{"muzzle":[45.58695652173913,-60.652173913043484],"footX":85.5,"footY":216},{"muzzle":[53.21739130434783,-90.3913043478261],"footX":16,"footY":238},{"muzzle":[61.630434782608695,-101.34782608695653],"footX":24.5,"footY":269},{"muzzle":[105.06521739130436,-64.95652173913044],"footX":25.5,"footY":221},{"muzzle":[49.69565217391305,-68.86956521739131],"footX":31,"footY":225},{"muzzle":[63.58695652173913,-21.91304347826087],"footX":23.5,"footY":230},{"muzzle":[65.34782608695653,-59.869565217391305],"footX":28,"footY":226}],"registration":{"scale":0.391304347826087,"poses":[{"sx":0,"sy":0,"sw":198,"sh":236,"minX":0,"minY":0,"maxX":197,"maxY":235,"footX":30,"footY":232,"tipX":195,"tipY":78,"sourceX":13,"sourceY":58},{"sx":0,"sy":0,"sw":206,"sh":220,"minX":0,"minY":0,"maxX":205,"maxY":219,"footX":85.5,"footY":216,"tipX":202,"tipY":61,"sourceX":232,"sourceY":73},{"sx":0,"sy":0,"sw":179,"sh":242,"minX":0,"minY":0,"maxX":178,"maxY":241,"footX":16,"footY":238,"tipX":152,"tipY":7,"sourceX":460,"sourceY":51},{"sx":0,"sy":0,"sw":186,"sh":273,"minX":0,"minY":0,"maxX":185,"maxY":272,"footX":24.5,"footY":269,"tipX":182,"tipY":10,"sourceX":659,"sourceY":20},{"sx":0,"sy":0,"sw":298,"sh":225,"minX":0,"minY":0,"maxX":297,"maxY":224,"footX":25.5,"footY":221,"tipX":294,"tipY":55,"sourceX":872,"sourceY":68},{"sx":0,"sy":0,"sw":212,"sh":229,"minX":0,"minY":0,"maxX":211,"maxY":228,"footX":31,"footY":225,"tipX":158,"tipY":49,"sourceX":1115,"sourceY":64},{"sx":0,"sy":0,"sw":190,"sh":234,"minX":0,"minY":0,"maxX":189,"maxY":233,"footX":23.5,"footY":230,"tipX":186,"tipY":174,"sourceX":1355,"sourceY":59},{"sx":0,"sy":0,"sw":199,"sh":230,"minX":0,"minY":0,"maxX":198,"maxY":229,"footX":28,"footY":226,"tipX":195,"tipY":73,"sourceX":1570,"sourceY":64}]}},"attackv3_frost":{"weapon":"frost","hero":"orin","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.58,"skillDuration":0.96,"completeBody":true,"source":"mage-source.png","points":[{"muzzle":[85.26315789473685,-66.3157894736842],"footX":28,"footY":235},{"muzzle":[79.14473684210526,-61.578947368421055],"footX":18.5,"footY":217},{"muzzle":[67.5,-109.34210526315789],"footX":26,"footY":289},{"muzzle":[73.02631578947368,-105],"footX":23,"footY":280},{"muzzle":[116.64473684210526,-77.76315789473685],"footX":34.5,"footY":226},{"muzzle":[87.63157894736842,-50.526315789473685],"footX":32,"footY":226},{"muzzle":[70.0657894736842,-16.57894736842105],"footX":27.5,"footY":228},{"muzzle":[67.5,-63.15789473684211],"footX":27,"footY":227}],"registration":{"scale":0.39473684210526316,"poses":[{"sx":0,"sy":0,"sw":247,"sh":239,"minX":0,"minY":0,"maxX":246,"maxY":238,"footX":28,"footY":235,"tipX":244,"tipY":67,"sourceX":11,"sourceY":350},{"sx":0,"sy":0,"sw":223,"sh":221,"minX":0,"minY":0,"maxX":222,"maxY":220,"footX":18.5,"footY":217,"tipX":219,"tipY":61,"sourceX":234,"sourceY":368},{"sx":0,"sy":0,"sw":201,"sh":293,"minX":0,"minY":0,"maxX":200,"maxY":292,"footX":26,"footY":289,"tipX":197,"tipY":12,"sourceX":449,"sourceY":296},{"sx":0,"sy":0,"sw":214,"sh":286,"minX":0,"minY":0,"maxX":213,"maxY":285,"footX":23,"footY":280,"tipX":208,"tipY":14,"sourceX":661,"sourceY":305},{"sx":0,"sy":0,"sw":334,"sh":230,"minX":0,"minY":0,"maxX":333,"maxY":229,"footX":34.5,"footY":226,"tipX":330,"tipY":29,"sourceX":860,"sourceY":359},{"sx":0,"sy":0,"sw":258,"sh":230,"minX":0,"minY":0,"maxX":257,"maxY":229,"footX":32,"footY":226,"tipX":254,"tipY":98,"sourceX":1108,"sourceY":359},{"sx":0,"sy":0,"sw":209,"sh":232,"minX":0,"minY":0,"maxX":208,"maxY":231,"footX":27.5,"footY":228,"tipX":205,"tipY":186,"sourceX":1349,"sourceY":357},{"sx":0,"sy":0,"sw":202,"sh":231,"minX":0,"minY":0,"maxX":201,"maxY":230,"footX":27,"footY":227,"tipX":198,"tipY":67,"sourceX":1570,"sourceY":358}]}},"attackv3_ember":{"weapon":"ember","hero":"orin","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.58,"skillDuration":0.96,"completeBody":true,"source":"mage-source.png","points":[{"muzzle":[74.070796460177,-76.06194690265487],"footX":28,"footY":228},{"muzzle":[82.83185840707965,-72.87610619469027],"footX":15,"footY":216},{"muzzle":[74.46902654867257,-107.52212389380531],"footX":16,"footY":279},{"muzzle":[72.27876106194691,-107.12389380530973],"footX":23.5,"footY":283},{"muzzle":[117.27876106194691,-82.0353982300885],"footX":23.5,"footY":220},{"muzzle":[66.50442477876106,-55.75221238938053],"footX":28,"footY":225},{"muzzle":[72.07964601769912,-15.132743362831858],"footX":24,"footY":226},{"muzzle":[68.49557522123894,-74.46902654867257],"footX":28,"footY":225}],"registration":{"scale":0.39823008849557523,"poses":[{"sx":0,"sy":0,"sw":219,"sh":232,"minX":0,"minY":0,"maxX":218,"maxY":231,"footX":28,"footY":228,"tipX":214,"tipY":37,"sourceX":9,"sourceY":646},{"sx":0,"sy":0,"sw":229,"sh":219,"minX":0,"minY":0,"maxX":228,"maxY":218,"footX":15,"footY":216,"tipX":223,"tipY":33,"sourceX":223,"sourceY":658},{"sx":0,"sy":0,"sw":209,"sh":283,"minX":0,"minY":0,"maxX":208,"maxY":282,"footX":16,"footY":279,"tipX":203,"tipY":9,"sourceX":466,"sourceY":595},{"sx":0,"sy":0,"sw":210,"sh":287,"minX":0,"minY":0,"maxX":209,"maxY":286,"footX":23.5,"footY":283,"tipX":205,"tipY":14,"sourceX":665,"sourceY":591},{"sx":0,"sy":0,"sw":323,"sh":224,"minX":0,"minY":0,"maxX":322,"maxY":223,"footX":23.5,"footY":220,"tipX":318,"tipY":14,"sourceX":867,"sourceY":654},{"sx":0,"sy":0,"sw":228,"sh":229,"minX":0,"minY":0,"maxX":227,"maxY":228,"footX":28,"footY":225,"tipX":195,"tipY":85,"sourceX":1116,"sourceY":649},{"sx":0,"sy":0,"sw":211,"sh":230,"minX":0,"minY":0,"maxX":210,"maxY":229,"footX":24,"footY":226,"tipX":205,"tipY":188,"sourceX":1357,"sourceY":648},{"sx":0,"sy":0,"sw":204,"sh":229,"minX":0,"minY":0,"maxX":203,"maxY":228,"footX":28,"footY":225,"tipX":200,"tipY":38,"sourceX":1570,"sourceY":649}]}},"attackv3_dawnseeker":{"weapon":"dawnseeker","hero":"brann","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.58,"skillDuration":0.96,"completeBody":true,"source":"dawnseeker-source.png","points":[{"muzzle":[41.95110024449878,-80.5281173594132],"footX":102.5,"footY":413},{"muzzle":[76.92909535452323,-71.75550122249389],"footX":24,"footY":390},{"muzzle":[29.466992665036678,-32.16625916870416],"footX":155,"footY":384},{"muzzle":[58.82151589242054,-80.75305623471883],"footX":143.5,"footY":427},{"muzzle":[110.66992665036675,-59.83374083129585],"footX":23,"footY":335},{"muzzle":[106.95843520782397,-47.23716381418093],"footX":25.5,"footY":284},{"muzzle":[44.312958435207825,-77.15403422982885],"footX":129,"footY":409},{"muzzle":[43.18826405867971,-79.85330073349634],"footX":108,"footY":413}],"registration":{"scale":0.22493887530562348,"poses":[{"sx":0,"sy":0,"sw":297,"sh":418,"minX":0,"minY":0,"maxX":296,"maxY":417,"footX":102.5,"footY":413,"tipX":289,"tipY":55,"sourceX":113,"sourceY":25},{"sx":0,"sy":0,"sw":372,"sh":395,"minX":0,"minY":0,"maxX":371,"maxY":394,"footX":24,"footY":390,"tipX":366,"tipY":71,"sourceX":508,"sourceY":47},{"sx":0,"sy":0,"sw":298,"sh":389,"minX":0,"minY":0,"maxX":297,"maxY":388,"footX":155,"footY":384,"tipX":286,"tipY":241,"sourceX":912,"sourceY":54},{"sx":0,"sy":0,"sw":413,"sh":432,"minX":0,"minY":0,"maxX":412,"maxY":431,"footX":143.5,"footY":427,"tipX":405,"tipY":68,"sourceX":1336,"sourceY":10},{"sx":0,"sy":0,"sw":522,"sh":340,"minX":0,"minY":0,"maxX":521,"maxY":339,"footX":23,"footY":335,"tipX":515,"tipY":69,"sourceX":22,"sourceY":525},{"sx":0,"sy":0,"sw":507,"sh":289,"minX":0,"minY":0,"maxX":506,"maxY":288,"footX":25.5,"footY":284,"tipX":501,"tipY":74,"sourceX":488,"sourceY":579},{"sx":0,"sy":0,"sw":336,"sh":414,"minX":0,"minY":0,"maxX":335,"maxY":413,"footX":129,"footY":409,"tipX":326,"tipY":66,"sourceX":964,"sourceY":454},{"sx":0,"sy":0,"sw":308,"sh":418,"minX":0,"minY":0,"maxX":307,"maxY":417,"footX":108,"footY":413,"tipX":300,"tipY":58,"sourceX":1440,"sourceY":450}]}},"attackv3_storm":{"weapon":"storm","hero":"nyx","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.58,"skillDuration":0.96,"completeBody":true,"source":"storm-source.png","points":[{"muzzle":[75.31172069825436,-69.32668329177058],"footX":48,"footY":386},{"muzzle":[50,-73.81546134663341],"footX":161.5,"footY":396},{"muzzle":[57.730673316708234,-64.08977556109726],"footX":151.5,"footY":416},{"muzzle":[54.48877805486285,-69.82543640897757],"footX":166.5,"footY":427},{"muzzle":[59.85037406483791,-66.08478802992519],"footX":172,"footY":420},{"muzzle":[93.89027431421447,-62.59351620947631],"footX":46.5,"footY":401},{"muzzle":[67.70573566084788,-51.62094763092269],"footX":59.5,"footY":350},{"muzzle":[72.81795511221945,-66.83291770573567],"footX":47,"footY":381}],"registration":{"scale":0.24937655860349128,"poses":[{"sx":0,"sy":0,"sw":355,"sh":391,"minX":0,"minY":0,"maxX":354,"maxY":390,"footX":48,"footY":386,"tipX":350,"tipY":108,"sourceX":42,"sourceY":48},{"sx":0,"sy":0,"sw":367,"sh":401,"minX":0,"minY":0,"maxX":366,"maxY":400,"footX":161.5,"footY":396,"tipX":362,"tipY":100,"sourceX":493,"sourceY":38},{"sx":0,"sy":0,"sw":389,"sh":421,"minX":0,"minY":0,"maxX":388,"maxY":420,"footX":151.5,"footY":416,"tipX":383,"tipY":159,"sourceX":939,"sourceY":18},{"sx":0,"sy":0,"sw":389,"sh":432,"minX":0,"minY":0,"maxX":388,"maxY":431,"footX":166.5,"footY":427,"tipX":385,"tipY":147,"sourceX":1368,"sourceY":7},{"sx":0,"sy":0,"sw":415,"sh":425,"minX":0,"minY":0,"maxX":414,"maxY":424,"footX":172,"footY":420,"tipX":412,"tipY":155,"sourceX":23,"sourceY":445},{"sx":0,"sy":0,"sw":427,"sh":406,"minX":0,"minY":0,"maxX":426,"maxY":405,"footX":46.5,"footY":401,"tipX":423,"tipY":150,"sourceX":458,"sourceY":463},{"sx":0,"sy":0,"sw":338,"sh":354,"minX":0,"minY":0,"maxX":337,"maxY":353,"footX":59.5,"footY":350,"tipX":331,"tipY":143,"sourceX":936,"sourceY":523},{"sx":0,"sy":0,"sw":344,"sh":385,"minX":0,"minY":0,"maxX":343,"maxY":384,"footX":47,"footY":381,"tipX":339,"tipY":113,"sourceX":1376,"sourceY":492}]}},"attackv3_scepter":{"weapon":"scepter","hero":"sera","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.58,"skillDuration":0.96,"completeBody":true,"source":"healer_rods-source.png","points":[{"muzzle":[59.47663551401869,-65.10280373831776],"footX":37,"footY":218},{"muzzle":[81.17757009345794,-65.10280373831776],"footX":22,"footY":215},{"muzzle":[71.53271028037383,-22.102803738317757],"footX":29,"footY":212},{"muzzle":[79.36915887850468,-79.97196261682242],"footX":28.5,"footY":214},{"muzzle":[83.58878504672897,-71.53271028037383],"footX":98,"footY":200},{"muzzle":[105.08878504672897,-69.5233644859813],"footX":23.5,"footY":200},{"muzzle":[38.981308411214954,-31.345794392523363],"footX":99,"footY":206},{"muzzle":[63.294392523364486,-65.90654205607477],"footX":35.5,"footY":215}],"registration":{"scale":0.40186915887850466,"poses":[{"sx":0,"sy":0,"sw":190,"sh":222,"minX":0,"minY":0,"maxX":189,"maxY":221,"footX":37,"footY":218,"tipX":185,"tipY":56,"sourceX":39,"sourceY":11},{"sx":0,"sy":0,"sw":230,"sh":219,"minX":0,"minY":0,"maxX":229,"maxY":218,"footX":22,"footY":215,"tipX":224,"tipY":53,"sourceX":303,"sourceY":14},{"sx":0,"sy":0,"sw":212,"sh":216,"minX":0,"minY":0,"maxX":211,"maxY":215,"footX":29,"footY":212,"tipX":207,"tipY":157,"sourceX":585,"sourceY":17},{"sx":0,"sy":0,"sw":237,"sh":218,"minX":0,"minY":0,"maxX":236,"maxY":217,"footX":28.5,"footY":214,"tipX":226,"tipY":15,"sourceX":834,"sourceY":15},{"sx":0,"sy":0,"sw":320,"sh":204,"minX":0,"minY":0,"maxX":319,"maxY":203,"footX":98,"footY":200,"tipX":306,"tipY":22,"sourceX":1083,"sourceY":29},{"sx":0,"sy":0,"sw":294,"sh":204,"minX":0,"minY":0,"maxX":293,"maxY":203,"footX":23.5,"footY":200,"tipX":285,"tipY":27,"sourceX":1414,"sourceY":29},{"sx":0,"sy":0,"sw":204,"sh":210,"minX":0,"minY":0,"maxX":203,"maxY":209,"footX":99,"footY":206,"tipX":196,"tipY":128,"sourceX":1707,"sourceY":23},{"sx":0,"sy":0,"sw":199,"sh":219,"minX":0,"minY":0,"maxX":198,"maxY":218,"footX":35.5,"footY":215,"tipX":193,"tipY":51,"sourceX":1962,"sourceY":14}]}},"attackv3_bloom":{"weapon":"bloom","hero":"sera","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.58,"skillDuration":0.96,"completeBody":true,"source":"healer_rods-source.png","points":[{"muzzle":[37.8479262672811,-54.294930875576036],"footX":89.5,"footY":217},{"muzzle":[74.90322580645162,-53.89861751152074],"footX":20,"footY":217},{"muzzle":[72.92165898617512,-22.193548387096776],"footX":30,"footY":222},{"muzzle":[2.576036866359447,-76.88479262672811],"footX":202.5,"footY":236},{"muzzle":[107.99539170506912,-59.84331797235023],"footX":23.5,"footY":203},{"muzzle":[104.03225806451613,-64.20276497695852],"footX":20.5,"footY":211},{"muzzle":[71.93087557603687,-28.93087557603687],"footX":24.5,"footY":211},{"muzzle":[60.43778801843318,-61.03225806451613],"footX":34.5,"footY":217}],"registration":{"scale":0.39631336405529954,"poses":[{"sx":0,"sy":0,"sw":205,"sh":233,"minX":0,"minY":0,"maxX":204,"maxY":232,"footX":89.5,"footY":217,"tipX":185,"tipY":80,"sourceX":40,"sourceY":250},{"sx":0,"sy":0,"sw":231,"sh":221,"minX":0,"minY":0,"maxX":230,"maxY":220,"footX":20,"footY":217,"tipX":209,"tipY":81,"sourceX":301,"sourceY":250},{"sx":0,"sy":0,"sw":220,"sh":226,"minX":0,"minY":0,"maxX":219,"maxY":225,"footX":30,"footY":222,"tipX":214,"tipY":166,"sourceX":583,"sourceY":245},{"sx":0,"sy":0,"sw":235,"sh":237,"minX":0,"minY":0,"maxX":234,"maxY":236,"footX":202.5,"footY":236,"tipX":209,"tipY":42,"sourceX":839,"sourceY":246},{"sx":0,"sy":0,"sw":317,"sh":207,"minX":0,"minY":0,"maxX":316,"maxY":206,"footX":23.5,"footY":203,"tipX":296,"tipY":52,"sourceX":1087,"sourceY":264},{"sx":0,"sy":0,"sw":305,"sh":215,"minX":0,"minY":0,"maxX":304,"maxY":214,"footX":20.5,"footY":211,"tipX":283,"tipY":49,"sourceX":1405,"sourceY":256},{"sx":0,"sy":0,"sw":226,"sh":215,"minX":0,"minY":0,"maxX":225,"maxY":214,"footX":24.5,"footY":211,"tipX":206,"tipY":138,"sourceX":1705,"sourceY":256},{"sx":0,"sy":0,"sw":207,"sh":221,"minX":0,"minY":0,"maxX":206,"maxY":220,"footX":34.5,"footY":217,"tipX":187,"tipY":63,"sourceX":1964,"sourceY":250}]}},"attackv3_halo":{"weapon":"halo","hero":"sera","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.58,"skillDuration":0.96,"completeBody":true,"source":"healer_rods-source.png","points":[{"muzzle":[40.9070796460177,-78.00884955752213],"footX":92.5,"footY":227},{"muzzle":[55.176991150442475,-73.4424778761062],"footX":88,"footY":221},{"muzzle":[39.384955752212385,-22.07079646017699],"footX":106.5,"footY":226},{"muzzle":[82.95575221238937,-80.67256637168141],"footX":19,"footY":226},{"muzzle":[112.44690265486724,-69.63716814159292],"footX":25.5,"footY":213},{"muzzle":[105.97787610619469,-69.63716814159292],"footX":23.5,"footY":215},{"muzzle":[77.0575221238938,-19.02654867256637],"footX":23.5,"footY":215},{"muzzle":[41.28761061946903,-76.48672566371681],"footX":89.5,"footY":226}],"registration":{"scale":0.3805309734513274,"poses":[{"sx":0,"sy":0,"sw":205,"sh":231,"minX":0,"minY":0,"maxX":204,"maxY":230,"footX":92.5,"footY":227,"tipX":200,"tipY":22,"sourceX":34,"sourceY":483},{"sx":0,"sy":0,"sw":238,"sh":225,"minX":0,"minY":0,"maxX":237,"maxY":224,"footX":88,"footY":221,"tipX":233,"tipY":28,"sourceX":302,"sourceY":488},{"sx":0,"sy":0,"sw":215,"sh":230,"minX":0,"minY":0,"maxX":214,"maxY":229,"footX":106.5,"footY":226,"tipX":210,"tipY":168,"sourceX":584,"sourceY":483},{"sx":0,"sy":0,"sw":242,"sh":230,"minX":0,"minY":0,"maxX":241,"maxY":229,"footX":19,"footY":226,"tipX":237,"tipY":14,"sourceX":833,"sourceY":483},{"sx":0,"sy":0,"sw":326,"sh":217,"minX":0,"minY":0,"maxX":325,"maxY":216,"footX":25.5,"footY":213,"tipX":321,"tipY":30,"sourceX":1074,"sourceY":496},{"sx":0,"sy":0,"sw":306,"sh":219,"minX":0,"minY":0,"maxX":305,"maxY":218,"footX":23.5,"footY":215,"tipX":302,"tipY":32,"sourceX":1406,"sourceY":494},{"sx":0,"sy":0,"sw":231,"sh":219,"minX":0,"minY":0,"maxX":230,"maxY":218,"footX":23.5,"footY":215,"tipX":226,"tipY":165,"sourceX":1705,"sourceY":494},{"sx":0,"sy":0,"sw":203,"sh":230,"minX":0,"minY":0,"maxX":202,"maxY":229,"footX":89.5,"footY":226,"tipX":198,"tipY":25,"sourceX":1964,"sourceY":483}]}},"attackv3_bell":{"weapon":"bell","hero":"sera","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.58,"skillDuration":0.96,"completeBody":true,"source":"healer_relics-source.png","points":[{"muzzle":[33.20474576271186,-38.3822372881356],"footX":45,"footY":319},{"muzzle":[48.68766101694915,-35.02969491525425],"footX":25.5,"footY":293},{"muzzle":[51.672881355932205,-59.69857627118645],"footX":36.5,"footY":282},{"muzzle":[61.28447457627119,-74.09993220338984],"footX":32.5,"footY":327},{"muzzle":[88.1164745762712,-42.405288135593224],"footX":18.5,"footY":278},{"muzzle":[50.183186440677964,-29.793898305084753],"footX":139.5,"footY":263},{"muzzle":[40.52203389830509,-35.44366101694916],"footX":25.5,"footY":295},{"muzzle":[17.75389830508474,-36.13166101694916],"footX":87.5,"footY":302}],"registration":{"scale":0.29152542372881357,"poses":[{"sx":0,"sy":0,"sw":227,"sh":323,"minX":0,"minY":0,"maxX":226,"maxY":322,"footX":45,"footY":319,"tipX":158.89999999999998,"tipY":187.33999999999997,"sourceX":4,"sourceY":25},{"sx":0,"sy":0,"sw":279,"sh":298,"minX":0,"minY":0,"maxX":278,"maxY":297,"footX":25.5,"footY":293,"tipX":192.51,"tipY":172.83999999999997,"sourceX":241,"sourceY":50},{"sx":0,"sy":0,"sw":285,"sh":286,"minX":0,"minY":0,"maxX":284,"maxY":285,"footX":36.5,"footY":282,"tipX":213.75,"tipY":77.22,"sourceX":530,"sourceY":63},{"sx":0,"sy":0,"sw":296,"sh":331,"minX":0,"minY":0,"maxX":295,"maxY":330,"footX":32.5,"footY":327,"tipX":242.72,"tipY":72.82000000000001,"sourceX":813,"sourceY":18},{"sx":0,"sy":0,"sw":396,"sh":282,"minX":0,"minY":0,"maxX":395,"maxY":281,"footX":18.5,"footY":278,"tipX":320.76000000000005,"tipY":132.54,"sourceX":1080,"sourceY":67},{"sx":0,"sy":0,"sw":371,"sh":268,"minX":0,"minY":0,"maxX":370,"maxY":267,"footX":139.5,"footY":263,"tipX":311.64,"tipY":160.79999999999998,"sourceX":1370,"sourceY":82},{"sx":0,"sy":0,"sw":235,"sh":299,"minX":0,"minY":0,"maxX":234,"maxY":298,"footX":25.5,"footY":295,"tipX":164.5,"tipY":173.42,"sourceX":1710,"sourceY":51},{"sx":0,"sy":0,"sw":212,"sh":307,"minX":0,"minY":0,"maxX":211,"maxY":306,"footX":87.5,"footY":302,"tipX":148.39999999999998,"tipY":178.05999999999997,"sourceX":1955,"sourceY":45}]}},"attackv3_seraph":{"weapon":"seraph","hero":"sera","frames":8,"width":256,"height":192,"anchor":[96,160],"release":4,"attackDuration":0.58,"skillDuration":0.96,"completeBody":true,"source":"seraph-source.png","points":[{"muzzle":[42.027070707070706,-34.53030303030303],"footX":52,"footY":405},{"muzzle":[34.91252525252525,-36.037474747474754],"footX":118,"footY":402},{"muzzle":[39.56,-61.318434343434355],"footX":58,"footY":411},{"muzzle":[70.88484848484849,-64.68242424242425],"footX":59.5,"footY":388},{"muzzle":[92.53686868686869,-40.611111111111114],"footX":29.5,"footY":380},{"muzzle":[83.45474747474748,-29.18787878787879],"footX":45.5,"footY":345},{"muzzle":[40.09858585858586,-32.66262626262627],"footX":84,"footY":385},{"muzzle":[40.876060606060605,-33.74848484848485],"footX":64.5,"footY":396}],"registration":{"scale":0.21717171717171718,"poses":[{"sx":0,"sy":0,"sw":341,"sh":410,"minX":0,"minY":0,"maxX":340,"maxY":409,"footX":52,"footY":405,"tipX":245.51999999999998,"tipY":246,"sourceX":36,"sourceY":33},{"sx":0,"sy":0,"sw":404,"sh":407,"minX":0,"minY":0,"maxX":403,"maxY":406,"footX":118,"footY":402,"tipX":278.76,"tipY":236.05999999999997,"sourceX":422,"sourceY":37},{"sx":0,"sy":0,"sw":316,"sh":415,"minX":0,"minY":0,"maxX":315,"maxY":414,"footX":58,"footY":411,"tipX":240.16,"tipY":128.65,"sourceX":925,"sourceY":29},{"sx":0,"sy":0,"sw":454,"sh":392,"minX":0,"minY":0,"maxX":453,"maxY":391,"footX":59.5,"footY":388,"tipX":385.9,"tipY":90.16000000000001,"sourceX":1304,"sourceY":52},{"sx":0,"sy":0,"sw":536,"sh":386,"minX":0,"minY":0,"maxX":535,"maxY":385,"footX":29.5,"footY":380,"tipX":455.59999999999997,"tipY":193,"sourceX":17,"sourceY":468},{"sx":0,"sy":0,"sw":494,"sh":351,"minX":0,"minY":0,"maxX":493,"maxY":350,"footX":45.5,"footY":345,"tipX":429.78,"tipY":210.6,"sourceX":506,"sourceY":503},{"sx":0,"sy":0,"sw":368,"sh":391,"minX":0,"minY":0,"maxX":367,"maxY":390,"footX":84,"footY":385,"tipX":268.64,"tipY":234.6,"sourceX":951,"sourceY":465},{"sx":0,"sy":0,"sw":351,"sh":401,"minX":0,"minY":0,"maxX":350,"maxY":400,"footX":64.5,"footY":396,"tipX":252.72,"tipY":240.6,"sourceX":1389,"sourceY":458}]}}};
 // All 31 weapons have complete attack clips. Art remains whole: no grafted limbs.
@@ -3316,8 +3710,8 @@ const weaponAttackStyles={
  rifle:['rustshot-recoil','impact','gun'],stormcoil:['stormcoil-discharge','bolt','gun'],repeater:['void-echo','void','gun'],cannon:['sunbreaker-lance','sun','gun'],harbinger:['obsidian-collapse','blood','gun']
 };
 const weaponAttackProfiles={};
-for(const w of weapons){const [signature,theme,family]=weaponAttackStyles[w.id],clip=providedActions[actionBindings[w.id]?.attack];if(!clip)throw Error('Missing complete attack: '+w.id);const weights=Array.from({length:clip.frames},(_,i)=>i<clip.release?[1.1,1.15,1.4,.65][i%4]:i===clip.release?.65:i===clip.frames-1?1.3:1.0),total=weights.reduce((a,b)=>a+b,0),edges=[0];for(const weight of weights)edges.push(edges.at(-1)+weight/total);weaponAttackProfiles[w.id]={signature,theme,family,tier:w.tier||0,weights,edges,releasePhase:edges[clip.release],duration:family==='gun'?(w.id==='harbinger'?.66:w.id==='cannon'?.62:.4):family==='punch'?(w.id==='titan'?.58:.48):family==='cleave'?.54:.6,detail:2+(w.tier||0)*2}}
-function attackPoseOffset(r){const a=r?.action;if(!a||a.kind!=='attack')return{x:0,y:0};const profile=weaponAttackProfiles[r.weapon.id],p=Math.max(0,Math.min(1,a.elapsed/a.duration)),release=profile.releasePhase;let move;if(p<release){const q=p/release;move=-1.8*Math.sin(q*Math.PI/2)}else{const q=(p-release)/(1-release);move=(profile.family==='gun'?-2.4:3.3)*Math.sin(q*Math.PI)}return{x:move*(r.heading<0?-1:1)*artAspect,y:Math.sin(p*Math.PI)*.7}}
+for(const w of weapons){const [signature,theme,family]=weaponAttackStyles[w.id],clip=providedActions[actionBindings[w.id]?.attack];if(!clip)throw Error('Missing complete attack: '+w.id);const {weights,edges}=actionTiming(family,clip.frames,clip.release);weaponAttackProfiles[w.id]={signature,theme,family,tier:w.tier||0,weights,edges,releasePhase:edges[clip.release],duration:family==='gun'?(w.id==='harbinger'?.66:w.id==='cannon'?.62:.4):family==='punch'?(w.id==='titan'?.58:.48):family==='cleave'?.54:.6,detail:2+(w.tier||0)*2}}
+function attackPoseOffset(r){const a=r?.action;if(!a||a.kind!=='attack')return{x:0,y:0};const offset=attackBodyMotion(weaponAttackProfiles[r.weapon.id],a.elapsed/a.duration,r.heading<0?-1:1);return{x:offset.x*artAspect,y:offset.y}}
 const weaponActionBefore=currentAction;
 currentAction=function(r){const a=weaponActionBefore(r);if(!a||a.kind!=='attack')return a;const profile=weaponAttackProfiles[r.weapon.id],p=Math.max(0,Math.min(.99999,a.elapsed/a.duration));let frame=profile.edges.findIndex((edge,i)=>i>0&&p<edge)-1;frame=Math.max(0,Math.min(a.data.frames-1,frame));if(r.action.contactHold>0)frame=a.data.release;return{...a,frame}};
 const weaponAttackBefore=classAttack;
@@ -3451,7 +3845,7 @@ function directorSpawnPoint(r,boss,size){
  }});
 }
 function spawnDirectorBatch(r,count,legacy=false,elite=false,atTime=null){
- const d=ensureDirector(r),elapsed=atTime??(r.mode==='survival'?r.time:Math.min(180,(globalWave(r)-1)*180/99)),plan=planDirectorWave(d,{elapsed,maxCount:count,legacy,elite,allowEaters:true,allowStalkers:true,stalkerCount:r.enemies.filter(e=>e.hp>0&&isShadowStalker(e)).length,fuel:r.lantern?.fuel??100,chapter:r.chapter,eaterCount:r.enemies.filter(e=>e.hp>0&&e.archetype===EATER_CONFIG.archetype).length});
+ const d=ensureDirector(r),elapsed=atTime??(r.mode==='survival'?r.time:Math.min(180,(globalWave(r)-1)*180/99)),plan=planDirectorWave(d,{elapsed,maxCount:count,legacy,elite,allowEaters:true,allowStalkers:true,allowWardens:true,wardenCount:r.enemies.filter(e=>e.hp>0&&isWarden(e)).length,allowMimics:true,mimicCount:r.enemies.filter(e=>e.hp>0&&isMimic(e)).length,stalkerCount:r.enemies.filter(e=>e.hp>0&&isShadowStalker(e)).length,fuel:r.lantern?.fuel??100,chapter:r.chapter,eaterCount:r.enemies.filter(e=>e.hp>0&&e.archetype===EATER_CONFIG.archetype).length});
  let spawned=0;for(const entry of plan.entries){const e=spawnEnemy(false,entry.type,{arrival:true,archetype:entry.archetype});if(e)spawned++;if(e&&entry.elite){promoteWaveElite(e,r);d.eliteSpawned=true;banner('Elite hunt · Clear space before the last stand')}}
  return {...plan,spawned};
 }
@@ -3478,6 +3872,121 @@ function updateLanternEater(r,e,dt,angle){
  if(result.event==='channel')sound(115,.09,'triangle',.025);
 }
 // Runner navigation/cover/contact use the same terrain and damage authorities as other actors.
+function archerMuzzle(e){return{x:e.x,y:e.y-e.size*.5}}
+function archerCoverBoxes(r,e){
+ if(r.mode!=='story'||!r.story)return[];const map=storyTerrain(r.chapter),boxes=[],tx=Math.floor(e.x/50),ty=Math.floor(e.y/50);
+ for(let y=Math.max(0,ty-5);y<=Math.min(29,ty+5);y++)for(let x=Math.max(0,tx-5);x<=Math.min(47,tx+5);x++)if(map.tiles[y][x]!==1)boxes.push({x:x*50,y:y*50,w:50,h:50});
+ for(const p of map.props)if(!r.story.destroyed.includes(p.id))boxes.push(p);
+ for(const g of map.gates)if(storyGateClosed(r,g))boxes.push(g);
+ return boxes.filter(b=>Math.hypot(b.x+b.w/2-e.x,b.y+b.h/2-e.y)<ARCHER_CONFIG.coverDistance).sort((a,b)=>Math.hypot(a.x+a.w/2-e.x,a.y+a.h/2-e.y)-Math.hypot(b.x+b.w/2-e.x,b.y+b.h/2-e.y)).slice(0,ARCHER_CONFIG.maxBoxes);
+}
+function archerCoverSensors(r,e){
+ const solidStory=r.mode==='story'&&r.story,radius=Math.min(18,Math.max(8,e.size*.65)),room=solidStory&&r.story.rooms[r.story.combatRoom]?.fighting?storyRoomBoxes[e.storyRoom||r.story.combatRoom]:null;
+ return{
+  canStand:p=>p.x>=24&&p.x<=MW-24&&p.y>=24&&p.y<=MH-24&&(!room||p.x>room.x+radius&&p.x<room.x+room.w-radius&&p.y>room.y+radius&&p.y<room.y+room.h-radius)&&!storySolid(r,p.x,p.y,radius),
+  visibleAt:p=>!solidStory||storyLineOfSight(r,p.x,p.y-e.size*.5,r.x,r.y,COMBAT_CONFIG.terrainProjectileRadius),
+  pathClear:(a,b)=>!solidStory||storyLineOfSight(r,a.x,a.y,b.x,b.y,radius),
+  reserved:p=>r.enemies.some(q=>q!==e&&q.hp>0&&(Math.hypot(q.x-p.x,q.y-p.y)<e.size+q.size+4||q.archer?.cover&&Math.hypot(q.archer.cover.hide.x-p.x,q.archer.cover.hide.y-p.y)<35))
+ };
+}
+function findArcherCover(r,e,planning){
+ if(r.mode!=='story'||!r.story)return null;if(planning.left<=0)return undefined;planning.left--;
+ return chooseArcherCover(e,r,archerCoverBoxes(r,e),archerCoverSensors(r,e));
+}
+function prepareArcherVolley(e,r,angle){
+ // Capture the existing chapter/elite pattern, then let the new warning own its release.
+ e.cast=null;enemyTrait(e,r,0,angle,Math.hypot(e.x-r.x,e.y-r.y));const trait=e.cast;e.cast=null;
+ return{shots:[{angle,speed:ARCHER_CONFIG.projectileSpeed,dmg:e.dmg,color:chapters[e.chapter-1].accent},...(trait?.shots||[])].slice(0,ARCHER_CONFIG.maxShots),zones:(trait?.zones||[]).slice(0,ARCHER_CONFIG.maxZones)};
+}
+function updateCoverArcher(r,e,dt,approachAngle,planning){
+ e.archer??=createArcherState(e.phase||0);e.traitCd=Math.max(0,(e.traitCd||0)-dt);
+ const origin=archerMuzzle(e),sensors=archerCoverSensors(r,e),s=e.archer;
+ const needsSight=e.stun<=0&&['approach','peek','windup','retreat'].includes(s.state);
+ const visible=!needsSight||r.mode!=='story'||!r.story||sensors.visibleAt(e);
+ if(e.stun<=0&&!s.cover&&s.state==='approach')approachAngle=storySteeringAngle(e,r,approachAngle);
+ const events=tickCoverArcher(e,r,dt,{origin,visible,approachAngle,
+  aimClear:r.mode!=='story'||!r.story||s.state!=='windup'||!visible||s.aimX===r.x&&s.aimY===r.y||storyLineOfSight(r,origin.x,origin.y,s.aimX,s.aimY,COMBAT_CONFIG.terrainProjectileRadius),
+  findCover:()=>findArcherCover(r,e,planning),
+  coverValid:p=>sensors.canStand(p.hide)&&sensors.canStand(p.peek)&&!sensors.visibleAt(p.hide)&&sensors.visibleAt(p.peek)&&sensors.pathClear(p.hide,p.peek),
+  move(from,to,state){
+   let heading=Math.atan2(to.y-from.y,to.x-from.x),distance=Math.hypot(to.x-from.x,to.y-from.y);
+   if(state==='seek'&&e.archer.cover&&!sensors.pathClear(from,e.archer.cover.hide)){
+    const peek=e.archer.cover.peek;heading=Math.atan2(peek.y-from.y,peek.x-from.x);distance=Math.min(distance,Math.hypot(peek.x-from.x,peek.y-from.y));
+   }
+   for(const turn of [0,Math.PI/3,-Math.PI/3,Math.PI*.7,-Math.PI*.7]){
+    const p={x:from.x+Math.cos(heading+turn)*distance,y:from.y+Math.sin(heading+turn)*distance};
+    if(sensors.canStand(p)&&sensors.pathClear(from,p)&&!sensors.reserved(p))return p;
+   }return{...from,blocked:true};
+  },prepareVolley:angle=>prepareArcherVolley(e,r,angle),
+  onRelease:volley=>{queueEnemyCast(e,volley.shots,volley.zones);if(e.cast){e.cast.left=0;tickEnemyCast(e,r,0)}}
+ });
+ if(events.includes('windup'))sound(260,.06,'triangle',.02);
+}
+function clearWardenZones(r,e){r.hazards=r.hazards.filter(h=>h.wardenOwner!==e.warden.id)}
+function wardenPointClear(r,e,p){
+ const radius=WARDEN_CONFIG.radius;if(!p||p.x<radius+24||p.x>MW-radius-24||p.y<radius+24||p.y>MH-radius-24||storySolid(r,p.x,p.y,radius))return false;
+ return r.mode!=='story'||!r.story||storyLineOfSight(r,e.x,e.y,p.x,p.y,3);
+}
+function selectWardenTarget(r,e){
+ if(r.hazards.length>=120||r.hazards.filter(h=>h.wardenOwner!==undefined).length>=WARDEN_CONFIG.maxZones)return null;
+ const danger=p=>r.hazards.some(h=>!h.struck&&Math.hypot(h.x-p.x,h.y-p.y)<h.radius+WARDEN_CONFIG.radius+12)||r.enemies.some(q=>q!==e&&wardenCasting(q)&&Math.hypot(q.warden.target.x-p.x,q.warden.target.y-p.y)<WARDEN_CONFIG.radius*2+12);
+ return chooseWardenZone(r,{canPlace:p=>wardenPointClear(r,e,p)&&!danger(p),canEscape:p=>{
+  for(let i=0;i<8;i++){const a=i*Math.PI/4,escape={x:p.x+Math.cos(a)*(WARDEN_CONFIG.radius+30),y:p.y+Math.sin(a)*(WARDEN_CONFIG.radius+30)};
+   if(escape.x<24||escape.x>MW-24||escape.y<24||escape.y>MH-24||storySolid(r,escape.x,escape.y,13)||danger(escape))continue;
+   if(r.mode!=='story'||!r.story||storyLineOfSight(r,r.x,r.y,escape.x,escape.y,13))return true;
+  }return false;
+ }});
+}
+function updateWarden(r,e,dt){
+ const casters=r.enemies.filter(wardenCasting),index=casters.indexOf(e);
+ tickWarden(e,r,dt,{visible:r.mode!=='story'||!r.story||storyLineOfSight(r,e.x,e.y,r.x,r.y,3),slotAvailable:index<0?casters.length<WARDEN_CONFIG.maxCasting:index<WARDEN_CONFIG.maxCasting,
+  chooseTarget:()=>selectWardenTarget(r,e),targetClear:p=>wardenPointClear(r,e,p),clear:()=>clearWardenZones(r,e),
+  move(seconds){const from={x:e.x,y:e.y},a=storySteeringAngle(e,r,Math.atan2(r.y-e.y,r.x-e.x)),step=Math.min(90,e.speed)*seconds;e.x=Math.max(24,Math.min(MW-24,e.x+Math.cos(a)*step));e.y=Math.max(24,Math.min(MH-24,e.y+Math.sin(a)*step));storyMoveEnemy(r,e,from)},
+  release(p){if(r.hazards.length>=120||r.hazards.filter(h=>h.wardenOwner!==undefined).length>=WARDEN_CONFIG.maxZones)return;
+   r.hazards.push({...p,radius:WARDEN_CONFIG.radius,dmg:e.dmg,t:.45,delay:.4,struck:false,wardenOwner:e.warden.id});e.attackAnim=.4;addCombatFx(r,'enemyCast',e.x,e.y-e.size*.5,{theme:'void',size:32,life:.3});
+  }
+ });
+}
+function clearMimicCopies(r,e){for(const q of r.enemies)if(isMimicDecoy(q)&&q.mimicOwner===e.mimic.id)q.hp=0}
+function createMimicCopies(r,e){
+ clearMimicCopies(r,e);const radius=Math.min(18,Math.max(8,e.size*.65));
+ const points=chooseMimicCopies(e,{canPlace:p=>p.x>=24&&p.x<=MW-24&&p.y>=24&&p.y<=MH-24&&!storySolid(r,p.x,p.y,radius)&&
+  (r.mode!=='story'||!r.story||storyLineOfSight(r,e.x,e.y,p.x,p.y,radius))&&!r.enemies.some(q=>q.hp>0&&Math.hypot(q.x-p.x,q.y-p.y)<q.size+e.size+4)});
+ const cap=r.mode==='survival'?DIRECTOR_CONFIG.survival.cap:Math.min(DIRECTOR_CONFIG.maxActive,difficultyProfile(r).cap);
+ for(const p of points){if(r.enemies.filter(q=>q.hp>0).length>=cap)break;
+  r.enemies.push({...e,...p,archetype:MIMIC_CONFIG.decoy,name:'Spectral echo',hp:1,maxHp:1,dmg:0,mimic:undefined,mimicOwner:e.mimic.id,decoyLeft:MIMIC_CONFIG.decoyLife,cast:null,contactWindup:0,stun:0,flash:0});
+ }
+}
+function updateMimic(r,e,dt){
+ tickMimic(e,r,dt,{visible:r.mode!=='story'||!r.story||storyLineOfSight(r,e.x,e.y,r.x,r.y,3),
+  clear:()=>clearMimicCopies(r,e),split:()=>createMimicCopies(r,e),
+  move(seconds){const from={x:e.x,y:e.y},a=storySteeringAngle(e,r,Math.atan2(r.y-e.y,r.x-e.x)),step=Math.min(100,e.speed)*seconds;e.x=Math.max(24,Math.min(MW-24,e.x+Math.cos(a)*step));e.y=Math.max(24,Math.min(MH-24,e.y+Math.sin(a)*step));storyMoveEnemy(r,e,from)},
+  fire(angle){queueEnemyCast(e,[{angle,speed:180,dmg:e.dmg,color:'#d4b0ff'}]);if(e.cast){e.cast.left=0;tickEnemyCast(e,r,0)}}
+ });
+}
+function updateBrute(r,e,dt,angle){
+ e.brute??=createBruteState();e.charging=0;e.chargeWindup=0;e.traitCd=Math.max(0,(e.traitCd||0)-dt);
+ const visible=r.mode!=='story'||!r.story||storyLineOfSight(r,e.x,e.y,r.x,r.y,2);
+ const events=tickBrute(e,r,dt,{visible,approachAngle:angle,
+  prepareZones(lockedAngle){
+   e.cast=null;enemyTrait(e,r,0,lockedAngle,Math.hypot(e.x-r.x,e.y-r.y));
+   const zones=(e.cast?.zones||[]).slice(0,4);e.cast=null;return zones;
+  },
+  onCharge(zones){if(zones.length){queueEnemyCast(e,[],zones);if(e.cast){e.cast.left=0;tickEnemyCast(e,r,0)}}},
+  move(from,to,charging){
+   const x=Math.max(24,Math.min(MW-24,to.x)),y=Math.max(24,Math.min(MH-24,to.y));
+   if(charging){const radius=Math.min(18,Math.max(8,e.size*.65)),blocked=x!==to.x||y!==to.y||storySolid(r,x,y,radius);return blocked?{...from,blocked:true}:{x,y}}
+   e.x=x;e.y=y;storyMoveEnemy(r,e,from);return{x:e.x,y:e.y};
+  },
+  onRush(from,to,start,end){
+   const contact=rushPlayerContact(r,from,to,e.size+COMBAT_CONFIG.playerContactPadding,start,end);
+   if(!contact||(r.mode==='story'&&r.story&&!storyLineOfSight(r,to.x,to.y,r.x,r.y,2)))return false;
+   const accepted=damagePlayer(r,e.dmg,'contact',contact.fraction);
+   if(accepted){e.attackAnim=.4;addCombatFx(r,'impact',to.x,to.y,{theme:enemyCombatTheme(e),size:28,life:.25})}return accepted;
+  }});
+ if(events.includes('windup'))sound(205,.07,'triangle',.025);
+ if(events.includes('charge'))addCombatFx(r,'dashWake',e.x,e.y,{theme:enemyCombatTheme(e),angle:e.brute.angle,size:48,life:.35});
+}
 function updateRunner(r,e,dt,angle){
  e.runner??=createRunnerState();
  const visible=r.mode!=='story'||!r.story||storyLineOfSight(r,e.x,e.y,r.x,r.y,2);
@@ -3535,9 +4044,14 @@ function updateFuelThreatHud(r){
 }
 const hitBeforeEater=hit;
 hit=function(e,damage,isSkill=false,isBurn=false){
+ if(isMimicDecoy(e)){if(e.hp>0&&Number.isFinite(damage)&&damage>0&&!run?.paused){e.hp=0;if(run)addCombatFx(run,'impact',e.x,e.y,{theme:'void',size:24,life:.25})}return}
  const before=e.hp;hitBeforeEater(e,damage,isSkill,isBurn);
+ if(isWarden(e)&&before>0&&e.hp<=0){interruptWarden(e,'defeated');if(run)clearWardenZones(run,e)}
+ if(isMimic(e)&&e.hp<before){interruptMimic(e,e.hp<=0?'defeated':'hit');if(run)clearMimicCopies(run,e)}
+ if(isBrute(e)&&before>0&&e.hp<=0)interruptBrute(e,'defeated');
  if(isRunner(e)&&before>0&&e.hp<=0)interruptRunner(e,'defeated');
  if(isShadowStalker(e)&&before>0&&e.hp<=0)interruptStalker(e,'defeated');
+ if(isCoverArcher(e)&&before>0&&e.hp<=0)interruptArcher(e,'defeated');
  if(e.archetype!==EATER_CONFIG.archetype||!e.eater||e.hp>=before)return;
  if(interruptEater(e,e.hp<=0?'defeated':'hit')&&run)textPop(e.x,e.y-55,'Siphon interrupted','#ffc76b');
  if(before>0&&e.hp<=0&&!e.eater.rewarded&&run?.lantern){e.eater.rewarded=true;
@@ -3546,7 +4060,58 @@ hit=function(e,damage,isSkill=false,isBurn=false){
  }
 };
 const drawBeforeEater=drawEnemyMotion;
-drawEnemyMotion=function(c,e,t){const result=drawBeforeEater(c,e,t);drawLanternEater(c,e,run);if(isRunner(e)&&e.runner)drawRunner(c,e,{laneLength:runnerLaneLength(run,e)});if(isShadowStalker(e)&&e.stalker){const s=e.stalker;drawShadowStalker(c,e,run,{laneLength:enemyLaneLength(run,e,s.angle,s.speed*(s.state==='windup'?STALKER_CONFIG.strike:s.state==='strike'?s.left:0))})}return result};drawAnimatedEnemy=drawEnemyMotion;drawChapterEnemy=drawEnemyMotion;
+drawEnemyMotion=function(c,e,t){const result=drawBeforeEater(c,e,t);drawLanternEater(c,e,run);drawMimic(c,e);drawWarden(c,e);if(isBrute(e)&&e.brute)drawBrute(c,e,{laneLength:enemyLaneLength(run,e,e.brute.angle,e.brute.speed*(e.brute.state==='windup'?BRUTE_CONFIG.charge:e.brute.left))});if(isCoverArcher(e)&&e.archer)drawCoverArcher(c,e,archerMuzzle(e));if(isRunner(e)&&e.runner)drawRunner(c,e,{laneLength:runnerLaneLength(run,e)});if(isShadowStalker(e)&&e.stalker){const s=e.stalker;drawShadowStalker(c,e,run,{laneLength:enemyLaneLength(run,e,s.angle,s.speed*(s.state==='windup'?STALKER_CONFIG.strike:s.state==='strike'?s.left:0))})}return result};drawAnimatedEnemy=drawEnemyMotion;drawChapterEnemy=drawEnemyMotion;
+
+// Portrait play crops the wide camera surface rather than stretching the world.
+// Keep the complete minimap inside that visible slice, including Story markers.
+const viewportMinimapBefore=drawMinimap;
+drawMinimap=function(c,r){
+ const width=window.innerWidth,height=window.innerHeight,portrait=width<=700&&height>width;
+ if(!portrait){viewportMinimapBefore(c,r);return}
+ const visibleWidth=W*width/(height*1.6),left=(W-visibleWidth)/2,scale=.65;
+ c.save();c.translate(left+5-12*scale,H-150-(H-190)*scale);c.scale(scale,scale);viewportMinimapBefore(c,r);c.restore();
+};
+// Combat motion is cosmetic: input, AI and damage continue through contact holds.
+const motionHitBefore=hit;
+hit=function(e,damage,isSkill=false,isBurn=false){
+ const r=run,hp=e.hp;motionHitBefore(e,damage,isSkill,isBurn);
+ if(!r||run!==r||e.hp>=hp||isBurn||isMimicDecoy(e))return;
+ const angle=Math.atan2(e.y-r.y,e.x-r.x),heavy=isSkill||hp-e.hp>r.dmg*1.5;
+ actorImpact(r,e,{angle,heavy,lethal:e.hp<=0,color:combatPalette[isSkill?combatSkillRecipes[r.activeSkill]?.theme||combatTheme(r):combatTheme(r)],reduced:reducedMotion});
+ if(e.hp<=0)inheritActorMotion(r,e,r.corpses.at(-1));
+};
+const motionReleaseBefore=releaseClassAttack;
+releaseClassAttack=function(r){
+ const before=r.muzzle;motionReleaseBefore(r);
+ const family=weaponAttackProfiles[r.weapon.id]?.family;
+ if(r.muzzle!==before&&['cleave','lantern','punch'].includes(family))motionEvent(r,'strike',r.x,r.y-22,{family,angle:r.aim||0,radius:Math.min(65,r.hero.range*.7),color:combatPalette[combatTheme(r)],life:family==='punch'?.17:.22});
+};
+const motionBossReleaseBefore=releaseBossSkill;
+releaseBossSkill=function(e,r){const cast=e.bossCast;motionBossReleaseBefore(e,r);if(cast&&e.bossCast!==cast&&e.hp>0)actorRelease(r,e,cast.angle||0)};
+const motionDamageBefore=damagePlayer;
+damagePlayer=function(r,...args){const accepted=motionDamageBefore(r,...args);if(accepted)motionEvent(r,'contact',r.x,r.y-22,{angle:(r.aim||0)+Math.PI,color:'#ff6874',heavy:true,life:.28});return accepted};
+const motionDashBefore=dash;
+dash=function(){const r=run,can=r&&!r.paused&&r.dashCd<=0;motionDashBefore();if(can&&r.dashTime>0){motionEvent(r,'launch',r.x,r.y+12,{color:'#bfa88b',life:.28});combatMotion(r).dashing=true}};$('#dash').onclick=dash;
+const motionUpdateBefore=update;
+update=function(dt){const r=run;motionUpdateBefore(dt);if(r&&run===r&&!r.paused)stepCombatMotion(r,dt,reducedMotion)};
+
+// Materials and consumables persist independently of the expedition's equipment build.
+const suppliesHitBefore=hit;
+hit=function(e,damage,isSkill=false,isBurn=false){
+ const r=run,hp=e.hp;suppliesHitBefore(e,damage*((r?.supplyBuffs?.fury_tonic||0)>0?1.15:1),isSkill,isBurn);
+ if(!r||run!==r||hp<=0||e.hp>0||isMimicDecoy(e))return;
+ const loot=materialRewards(e,e.boss||e.elite?0:directorRandom(ensureDirector(r),'events'));
+ if(Object.keys(loot).length&&grantInventory(save,loot)){if(e.boss){textPop(e.x,e.y-65,'Boss core +1','#ffd777');if(loot.dawn_essence)textPop(e.x,e.y-82,'Dawn essence +1','#c484ff')}else if(e.elite)textPop(e.x,e.y-65,'Forge fragments +6','#ffd777');persist()}
+};
+const suppliesDamageBefore=damagePlayer;
+damagePlayer=function(r,...args){const base=r.damageReduce;if((r.supplyBuffs?.iron_tonic||0)>0)r.damageReduce=Math.min(.65,(base||0)+.15);try{return suppliesDamageBefore(r,...args)}finally{r.damageReduce=base}};
+const suppliesTickBefore=tickSpriteAnimation;
+tickSpriteAnimation=function(r,dt){suppliesTickBefore(r,dt);tickSupplies(r,dt)};
+const suppliesHudBefore=updateHud;
+updateHud=function(){suppliesHudBefore();if(!run)return;const buffs=Object.entries(run.supplyBuffs||{}).filter(([,left])=>left>0).map(([id,left])=>(id==='fury_tonic'?'Fury ':'Guard ')+Math.ceil(left)+'s');$('#packButton span').textContent=(run.supplyCooldown||0)>0?Math.ceil(run.supplyCooldown)+'s':'Pack · I';$('#packButton').title='Field supplies · I. Health draught · R.'+(buffs.length?' '+buffs.join(' · '):'');$('#supplyBuffs').textContent=buffs.join(' · ');$('#supplyBuffs').classList.toggle('hidden',!buffs.length)};
+$('#packButton').onclick=openBattlePack;
+const supplyKeyHandler=e=>{if(!run||run.paused||e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;const key=e.key.toLowerCase();if(key==='i'||key==='r'){e.preventDefault();keys.delete(key);if(key==='i')openBattlePack();else useBattleSupply('healing_potion')}};
+window.addEventListener('keydown',supplyKeyHandler);
 
 syncCamp();
 renderShop();
@@ -3559,7 +4124,7 @@ return {
  setDirection(x,y){for(const k of ['w','a','s','d'])keys.delete(k);if(x<-.25)keys.add('a');if(x>.25)keys.add('d');if(y<-.25)keys.add('w');if(y>.25)keys.add('s')},
  suspend(){if(run){snapshot();if(!run.paused)pauseGame()}keys.clear();pointer=null},
  flush(){snapshot()},
- destroy(){snapshot();clearInterval(walletTimer);window.removeEventListener('keydown',lanternKeyHandler);$('#lanternMode').onclick=null;keys.clear()},
+ destroy(){snapshot();clearInterval(walletTimer);window.removeEventListener('keydown',lanternKeyHandler);window.removeEventListener('keydown',supplyKeyHandler);$('#packButton').onclick=null;$('#lanternMode').onclick=null;keys.clear()},
  get state(){return {playing:!!run,paused:!!run?.paused,page:currentPage}},
 };
 }

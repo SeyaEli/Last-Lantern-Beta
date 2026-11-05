@@ -1,5 +1,5 @@
 {
-  "gameplayChecks": 142,
+  "gameplayChecks": 212,
   "lanternModuleChecks": 10,
   "combatModuleChecks": 11,
   "directorModuleChecks": 9,
@@ -10,5 +10,10 @@
   "androidDebugBuild": true,
   "liveDeviceOrBrowserTested": false,
   "eaterModuleChecks": 11,
-  "runnerModuleChecks": 12
+  "runnerModuleChecks": 12,
+  "stalkerModuleChecks": 13,
+  "archerModuleChecks": 13,
+  "bruteModuleChecks": 14,
+  "mimicModuleChecks": 9,
+  "wardenModuleChecks": 10
 }

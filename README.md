@@ -1,6 +1,18 @@
 # Last Lantern — Windows and Android framework project
 
-**Runner states implemented:** the existing fast enemies now mark a locked rush lane, give a full warning, charge once and recover. Sidestep, dash, shield, use Story cover or stun them. Names, chapter art, director costs, brute and boss behavior are preserved. See [docs/RUNNER-STATES.md](docs/RUNNER-STATES.md) for changed files, tuning, tests and remaining work. **195 automated checks pass**; device playtesting and human balance tuning remain open.
+**Forge and supplies:** enhancements now require material recipes and can fail, with per-item pity, optional catalysts and preservation wards. The Supplies shop sells potions, oil, timed tonics and material bundles; the in-battle Pack button opens usable supplies. See [docs/FORGE-AND-SUPPLIES.md](docs/FORGE-AND-SUPPLIES.md) for odds, recipes, rewards and controls.
+
+**Void Warden implemented:** a limited caster marks a fixed ground seal with a full warning. Leave the ring, stun the caster or break Story sight to counter it. Safe-floor placement, escape checks, owner cleanup and Continue support are included. See [docs/VOID-WARDEN.md](docs/VOID-WARDEN.md) for changed files, tests and remaining work. **324 automated checks pass**; device playtesting remains open.
+
+**Spectral Mimic implemented:** a limited Specter variant creates harmless targetable echoes. Follow the filled diamond to identify the real enemy; hit or stun it to collapse its copies and interrupt the hex. See [docs/SPECTRAL-MIMIC.md](docs/SPECTRAL-MIMIC.md) for changed files, tests and remaining work. Device playtesting remains open.
+
+**Brute states implemented:** heavy enemies guard while waiting, mark a locked charge lane, rush once and recover. Sidestep, stun them or use Story cover; Continue preserves the single-hit flag and pending elite attacks. See [docs/BRUTE-STATES.md](docs/BRUTE-STATES.md) for changed files, tests, tuning and remaining work. Device playtesting remains open.
+
+**Cover archer implemented:** ranged enemies seek physical Story cover, hide, peek, show a locked aim warning, fire once and recover. Breaking sight, close pressure, stun or death cancels pending volleys. Existing chapter patterns and artwork are preserved. See [docs/COVER-ARCHER.md](docs/COVER-ARCHER.md) for changed files, tests, tuning and remaining work. Device playtesting remains open.
+
+**Shadow Stalker implemented:** a Woods Wisp variant circles outside your lantern light and retreats when illuminated. Dim or low oil permits a warned pounce; steady Normal oil holds it back, while fueled Bright can repel an active pounce. Ordinary Wisps and the other chapters retain their behavior. See [docs/SHADOW-STALKER.md](docs/SHADOW-STALKER.md) for changed files, tuning, tests and remaining work. Device playtesting and human balance tuning remain open.
+
+**Runner states implemented:** the existing fast enemies mark a locked rush lane, give a full warning, charge once and recover. Sidestep, dash, shield, use Story cover or stun them. Names, chapter art, director costs, brute and boss behavior are preserved. See [docs/RUNNER-STATES.md](docs/RUNNER-STATES.md).
 
 Interruptible **Lantern Eater** implemented: a visible charge precedes its fuel siphon. Attack, dash, shield, move out of range, break Story line of sight, or switch to Bright to stop it. Fuel-sensitive seeded encounters and bounded 12-oil death drops complete that code increment. See [docs/LANTERN-EATER.md](docs/LANTERN-EATER.md).
 
@@ -25,7 +37,7 @@ npm ci
 npm run dev
 ```
 
-`npm run build` creates the offline web assets in `dist/`. `npm test` checks asset paths and runs 195 checks across native engine integration and the lantern, combat, director, Eater and runner modules. `npm run preview` serves the production build. This source folder can be uploaded as a Git repository; keep `node_modules`, `dist`, `release`, native build caches and archives out of Git.
+`npm run build` creates the offline web assets in `dist/`. `npm test` checks asset paths and runs 324 checks across native engine integration and the lantern, combat, director, Eater, runner, Stalker, archer, brute, Mimic and Warden modules. `npm run preview` serves the production build. This source folder can be uploaded as a Git repository; keep `node_modules`, `dist`, `release`, native build caches and archives out of Git.
 
 ## Windows
 
@@ -34,7 +46,7 @@ npm run desktop
 npm run desktop:build
 ```
 
-The default packaged game is `release/windows/win-unpacked/Last Lantern.exe`; the latest runner test build is `release/windows-runner/win-unpacked/Last Lantern.exe`. Keep the entire `win-unpacked` folder together: the EXE needs its adjacent files. F11 or Alt+Enter toggles fullscreen. The renderer has no Node access and uses an isolated sandbox. No web server or Internet connection is needed to play the packaged game.
+The default packaged game is `release/windows/win-unpacked/Last Lantern.exe`; the latest Warden test build is `release/windows-warden/win-unpacked/Last Lantern.exe`. Keep the entire `win-unpacked` folder together: the EXE needs its adjacent files. F11 or Alt+Enter toggles fullscreen. The renderer has no Node access and uses an isolated sandbox. No web server or Internet connection is needed to play the packaged game.
 
 ## Android
 
@@ -71,7 +83,7 @@ The Windows folder is a build you can test and later use as the basis for your S
 
 ## Verification limits
 
-TypeScript/Vite compilation, Windows packaging, Android debug compilation and 195 automated checks passed for the current increment. Native Canvas runner warning and rush renders were inspected. The game was not launched for a new browser, Windows UI or physical Android performance test during this increment. The packaged builds are unsigned Windows / debug-signed Android testing builds. Live device performance, memory pressure, audio interruptions and release signing still need validation.
+TypeScript/Vite compilation, Windows packaging, Android debug compilation and 324 automated checks passed for the current increment. Native Canvas Warden warning and eruption renders were inspected. The game was not launched for a new browser, Windows UI or physical Android performance test during this increment. The packaged builds are unsigned Windows / debug-signed Android testing builds. Live device performance, memory pressure, audio interruptions and release signing still need validation.
 
 Framework references: [Phaser](https://docs.phaser.io/), [Electron security](https://www.electronjs.org/docs/latest/tutorial/security/), [Capacitor Android](https://capacitorjs.com/docs/android).
 

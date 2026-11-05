@@ -3,6 +3,6 @@
   "frames": 90,
   "enemies": 150,
   "projectileCap": 320,
-  "medianMilliseconds": 0.6785000000002128,
-  "p95Milliseconds": 1.1273000000001048
+  "medianMilliseconds": 2.0832000000000335,
+  "p95Milliseconds": 4.414800000000014
 }

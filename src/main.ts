@@ -3,6 +3,14 @@ import { loadAssets } from './engine/loadAssets';
 import { LanternScene } from './game/LanternScene';
 import './styles/game.css';
 import './styles/platform.css';
+import './styles/screens.css';
+import './styles/menu-art.css';
+import './styles/dark-fantasy.css';
+import './styles/equipment-shop.css';
+import { initializeScreens } from './ui/screens';
+import { initializeFantasySkin } from './ui/fantasy-skin';
+initializeScreens();
+initializeFantasySkin();
 const status=document.querySelector<HTMLElement>('#boot-message')!;
 async function start(){
   try{
